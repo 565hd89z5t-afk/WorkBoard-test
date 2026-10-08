@@ -257,8 +257,8 @@ button:disabled{
   gap:6px;
   flex-wrap:wrap;
   align-items:center;
-  }
-  
+}
+
 .person-checkbox{
   position:relative;
   cursor:pointer;
@@ -1390,7 +1390,7 @@ let unsub = null;
 let currentUser = null;
 
 let selectedUser =
-  localStorage.getItem("workboardUser") || null;
+  sessionStorage.getItem("workboardUser") || null;
 
 /* ================================================= */
 /* UTILITAIRE */
@@ -1459,7 +1459,7 @@ function setCurrentUser(name){
   selectedUser =
     name;
 
-  localStorage.setItem(
+  sessionStorage.setItem(
     "workboardUser",
     name
   );
