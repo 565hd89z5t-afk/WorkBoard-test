@@ -670,6 +670,20 @@ button:disabled{
   color:#8a969f;
 }
 
+.note-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.delete-note{
+  background:transparent;
+  color:#a34a43;
+  padding:3px 5px;
+  font-size:16px;
+  line-height:1;
+}
+
 .note-text{
   white-space:pre-wrap;
   word-break:break-word;
@@ -2248,6 +2262,117 @@ async function addNoteSafely(text){
 
 
 /* ================================================= */
+/* SUPPRESSION NOTE SECURISEE */
+/* ================================================= */
+
+async function deleteNoteSafely(noteId){
+
+  if(!currentUser || !selectedUser)
+    return;
+
+
+  const noteRef =
+    ref(currentUser.uid);
+
+
+  await runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(noteRef);
+
+
+      if(!snap.exists())
+        return;
+
+
+      const data =
+        snap.data();
+
+
+      let currentNotes = [];
+
+
+      if(
+        Array.isArray(data.notes)
+      ){
+
+        currentNotes =
+          data.notes;
+
+      }
+      else if(
+        typeof data.notes === "string" &&
+        data.notes.trim()
+      ){
+
+        currentNotes = [
+          {
+            id:crypto.randomUUID(),
+            author:"Utilisateur",
+            text:data.notes,
+            createdAt:Date.now()
+          }
+        ];
+
+      }
+
+
+      const note =
+        currentNotes.find(
+          item => item.id === noteId
+        );
+
+
+      if(!note)
+        return;
+
+
+      /*
+        Sécurité :
+        on peut uniquement supprimer
+        une note écrite par soi-même.
+      */
+
+      if(
+        note.author !== selectedUser
+      ){
+
+        console.warn(
+          "Suppression refusée : cette note n'appartient pas à l'utilisateur connecté."
+        );
+
+        return;
+
+      }
+
+
+      const newNotes =
+        currentNotes.filter(
+          item => item.id !== noteId
+        );
+
+
+      transaction.set(
+        noteRef,
+        {
+          notes:newNotes,
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* ================================================= */
 /* ENVOYER NOTE */
 /* ================================================= */
 
@@ -2394,6 +2519,20 @@ function renderNotes(){
         note.author || "Utilisateur";
 
 
+      /* ================================================= */
+      /* DATE + ACTIONS */
+      /* ================================================= */
+
+      const actions =
+        document.createElement(
+          "div"
+        );
+
+
+      actions.className =
+        "note-actions";
+
+
       const date =
         document.createElement(
           "span"
@@ -2408,6 +2547,87 @@ function renderNotes(){
         formatDate(
           note.createdAt
         );
+
+
+      actions.append(
+        date
+      );
+
+
+      /*
+        Le bouton supprimer apparaît uniquement
+        sur les notes écrites par l'utilisateur actuel.
+      */
+
+      if(
+        note.author === selectedUser
+      ){
+
+        const deleteButton =
+          document.createElement(
+            "button"
+          );
+
+
+        deleteButton.className =
+          "delete-note";
+
+
+        deleteButton.textContent =
+          "🗑️";
+
+
+        deleteButton.title =
+          "Supprimer ma note";
+
+
+        deleteButton.onclick =
+          async () => {
+
+            if(
+              !confirm(
+                "Supprimer cette note ?"
+              )
+            )
+              return;
+
+
+            deleteButton.disabled =
+              true;
+
+
+            try{
+
+              await deleteNoteSafely(
+                note.id
+              );
+
+            }
+            catch(e){
+
+              console.error(
+                "Erreur suppression note :",
+                e
+              );
+
+              alert(
+                "Impossible de supprimer la note."
+              );
+
+
+              deleteButton.disabled =
+                false;
+
+            }
+
+          };
+
+
+        actions.append(
+          deleteButton
+        );
+
+      }
 
 
       const text =
@@ -2426,7 +2646,7 @@ function renderNotes(){
 
       head.append(
         author,
-        date
+        actions
       );
 
 
@@ -2855,7 +3075,9 @@ function createDiscussion(
         text
       );
 
+
       input.value = "";
+
 
       status.textContent =
         "✓ Envoyé";
@@ -2878,6 +3100,7 @@ function createDiscussion(
         "Erreur commentaire :",
         e
       );
+
 
       status.textContent =
         "Erreur de sauvegarde";
@@ -2951,7 +3174,7 @@ async function toggle(id){
 
 
 /* ================================================= */
-/* SUPPRIMER */
+/* SUPPRIMER TACHE */
 /* ================================================= */
 
 async function del(id){
@@ -3703,7 +3926,7 @@ function render(){
 
 
       /* ================================================= */
-      /* SUPPRIMER */
+      /* SUPPRIMER TACHE */
       /* ================================================= */
 
       const deleteButton =
