@@ -1,499 +1,721 @@
 <!doctype html>
-
 <html lang="fr">
+
 <head>
 
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<meta name="theme-color" content="#17324d">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+
+<meta
+  name="theme-color"
+  content="#17324d"
+>
+
+<meta
+  name="description"
+  content="WorkBoard synchronisé"
+>
 
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png">
+
+<link
+  rel="icon"
+  href="icons/icon-192.png"
+>
 
 <title>WorkBoard — Synchronisé</title>
 
 <style>
 
+/* ================================================= */
+/* GENERAL */
+/* ================================================= */
+
 *{
-box-sizing:border-box
+  box-sizing:border-box;
 }
 
 body{
-margin:0;
-background:#f3f6f9;
-color:#183044;
-font-family:Arial,sans-serif
+  margin:0;
+  background:#f3f6f9;
+  color:#183044;
+  font-family:Arial,sans-serif;
 }
 
 .app{
-max-width:1100px;
-margin:auto;
-padding:18px
+  max-width:1100px;
+  margin:auto;
+  padding:18px;
 }
 
 .card{
-background:#fff;
-border-radius:18px;
-padding:18px;
-box-shadow:0 4px 18px #17324d12;
-margin-bottom:16px
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 4px 18px #17324d12;
+  margin-bottom:16px;
 }
 
 header{
-background:#17324d;
-color:#fff;
-border-radius:20px;
-padding:20px;
-margin-bottom:16px;
-display:flex;
-justify-content:space-between
+  background:#17324d;
+  color:#fff;
+  border-radius:20px;
+  padding:20px;
+  margin-bottom:16px;
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
 }
 
 h1{
-margin:0;
-font-size:30px
+  margin:0;
+  font-size:30px;
 }
 
-.sub,.small{
-opacity:.75;
-font-size:13px
+h2{
+  margin-top:0;
 }
+
+.sub,
+.small{
+  opacity:.75;
+  font-size:13px;
+}
+
+/* ================================================= */
+/* GRID */
+/* ================================================= */
 
 .grid{
-display:grid;
-grid-template-columns:1fr 2fr;
-gap:16px
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:16px;
 }
 
 .stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
 }
 
 .stat{
-background:#f4f7fa;
-border-radius:14px;
-padding:13px
+  background:#f4f7fa;
+  border-radius:14px;
+  padding:13px;
 }
 
 .num{
-font-size:25px;
-font-weight:700
+  font-size:25px;
+  font-weight:700;
 }
 
 .bar{
-height:12px;
-background:#e1e7ec;
-border-radius:20px;
-overflow:hidden;
-margin:10px 0
+  height:12px;
+  background:#e1e7ec;
+  border-radius:20px;
+  overflow:hidden;
+  margin:10px 0;
 }
 
 .fill{
-height:100%;
-width:0;
-background:#39845a
+  height:100%;
+  width:0;
+  background:#39845a;
+  transition:.2s;
 }
+
+/* ================================================= */
+/* FORMULAIRES */
+/* ================================================= */
 
 .add{
-display:grid;
-grid-template-columns:1fr 150px 1fr;
-gap:9px
+  display:grid;
+  grid-template-columns:1fr 150px 1fr;
+  gap:9px;
 }
 
-input,select,textarea{
-width:100%;
-padding:13px;
-border:1px solid #d4dce3;
-border-radius:11px;
-font-size:16px
+input,
+select,
+textarea{
+  width:100%;
+  padding:13px;
+  border:1px solid #d4dce3;
+  border-radius:11px;
+  font-size:16px;
+  font-family:Arial,sans-serif;
 }
 
 textarea{
-min-height:120px;
-resize:vertical
+  min-height:100px;
+  resize:vertical;
 }
 
 button{
-border:0;
-border-radius:11px;
-padding:12px 15px;
-font-weight:700;
-font-size:15px;
-cursor:pointer
+  border:0;
+  border-radius:11px;
+  padding:12px 15px;
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
 .primary{
-background:#286ca8;
-color:white
+  background:#286ca8;
+  color:white;
 }
 
 .secondary{
-background:#e8eef3;
-color:#29465d
+  background:#e8eef3;
+  color:#29465d;
 }
 
 .filters{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-margin-bottom:12px
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
 }
 
 .filters button.active{
-background:#17324d;
-color:white
+  background:#17324d;
+  color:white;
 }
-
 
 /* ================================================= */
 /* TACHES */
 /* ================================================= */
 
 .task{
-display:grid;
-grid-template-columns:45px 1fr auto;
-gap:12px;
-align-items:start;
-padding:15px 4px;
-border-bottom:1px solid #edf0f3
+  display:grid;
+  grid-template-columns:45px 1fr auto;
+  gap:12px;
+  align-items:start;
+  padding:15px 4px;
+  border-bottom:1px solid #edf0f3;
 }
 
 .check{
-width:28px;
-height:28px;
-accent-color:#39845a;
-margin-top:2px
+  width:28px;
+  height:28px;
+  accent-color:#39845a;
+  margin-top:2px;
 }
 
 .tasktitle{
-font-size:17px;
-font-weight:600
+  font-size:17px;
+  font-weight:600;
 }
 
 .done{
-text-decoration:line-through;
-color:#89939d
+  text-decoration:line-through;
+  color:#89939d;
 }
-
-
-/* ================================================= */
-/* COMMENTAIRE */
-/* ================================================= */
-
-.task-comment{
-margin-top:10px;
-display:flex;
-flex-direction:column;
-gap:5px
-}
-
-.task-comment-label{
-font-size:12px;
-font-weight:700;
-color:#71808c
-}
-
-.task-comment-input{
-width:100%;
-padding:9px 11px;
-border:1px solid #d9e0e6;
-border-radius:9px;
-font-size:14px;
-background:#fafbfc;
-resize:vertical;
-min-height:42px;
-max-height:140px;
-font-family:Arial,sans-serif;
-color:#29465d;
-outline:none
-}
-
-.task-comment-input:focus{
-border-color:#286ca8;
-background:#fff;
-box-shadow:0 0 0 2px #286ca814
-}
-
-.task-comment-input::placeholder{
-color:#9aa5ae
-}
-
-.comment-status{
-font-size:11px;
-color:#7b8791;
-min-height:14px
-}
-
 
 /* ================================================= */
 /* BADGES */
 /* ================================================= */
 
 .badge{
-padding:5px 8px;
-border-radius:8px;
-font-size:11px;
-font-weight:700;
-display:inline-block
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:700;
+  display:inline-block;
+  margin-top:6px;
 }
 
 .high{
-background:#fbe9e7;
-color:#a33b31
+  background:#fbe9e7;
+  color:#a33b31;
 }
 
 .med{
-background:#fff3d7;
-color:#8b6500
+  background:#fff3d7;
+  color:#8b6500;
 }
 
 .low{
-background:#e8f3ea;
-color:#357344
+  background:#e8f3ea;
+  color:#357344;
 }
-
 
 /* ================================================= */
 /* RESPONSABLES */
 /* ================================================= */
 
 .assignees{
-display:flex;
-gap:6px;
-flex-wrap:wrap;
-align-items:center
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
 }
 
 .person-checkbox{
-position:relative;
-cursor:pointer
+  position:relative;
+  cursor:pointer;
 }
 
 .person-checkbox input{
-position:absolute;
-opacity:0;
-pointer-events:none
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
 }
 
 .person-checkbox span{
-display:inline-block;
-padding:9px 12px;
-border-radius:9px;
-font-size:13px;
-font-weight:700;
-border:2px solid transparent;
-transition:.15s
+  display:inline-block;
+  padding:9px 12px;
+  border-radius:9px;
+  font-size:13px;
+  font-weight:700;
+  border:2px solid transparent;
+  transition:.15s;
 }
-
-
-/* YANNIS */
 
 .person-checkbox.yannis span{
-background:#dcecff;
-color:#1764a0
+  background:#dcecff;
+  color:#1764a0;
 }
-
-
-/* JEAN-LUC */
 
 .person-checkbox.jean-luc span{
-background:#f9dddd;
-color:#a83232
+  background:#f9dddd;
+  color:#a83232;
 }
-
-
-/* CATHERINE */
 
 .person-checkbox.catherine span{
-background:#fff1b8;
-color:#8a6a00
+  background:#fff1b8;
+  color:#8a6a00;
 }
-
 
 .person-checkbox input:checked + span{
-border-color:currentColor;
-box-shadow:0 0 0 2px #ffffff inset
+  border-color:currentColor;
+  box-shadow:0 0 0 2px #ffffff inset;
 }
-
 
 /* ================================================= */
 /* BADGES RESPONSABLES */
 /* ================================================= */
 
 .assignee-badges{
-display:flex;
-gap:5px;
-flex-wrap:wrap;
-margin-top:5px
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-top:5px;
 }
 
 .assignee-badge{
-padding:5px 8px;
-border-radius:8px;
-font-size:11px;
-font-weight:700
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:700;
 }
 
 .assignee-yannis{
-background:#dcecff;
-color:#1764a0
+  background:#dcecff;
+  color:#1764a0;
 }
 
 .assignee-jean-luc{
-background:#f9dddd;
-color:#a83232
+  background:#f9dddd;
+  color:#a83232;
 }
 
 .assignee-catherine{
-background:#fff1b8;
-color:#8a6a00
+  background:#fff1b8;
+  color:#8a6a00;
 }
-
 
 /* ================================================= */
 /* ACTIONS */
 /* ================================================= */
 
 .task-actions{
-display:flex;
-align-items:center;
-gap:4px
+  display:flex;
+  align-items:center;
+  gap:4px;
 }
 
 .edit,
 .delete,
 .save-edit,
 .cancel-edit{
-background:transparent;
-padding:5px 7px;
-font-size:18px
+  background:transparent;
+  padding:5px 7px;
+  font-size:18px;
 }
 
 .edit{
-color:#286ca8
+  color:#286ca8;
 }
 
 .delete{
-color:#a34a43;
-font-size:20px
+  color:#a34a43;
+  font-size:20px;
 }
 
 .save-edit{
-color:#39845a
+  color:#39845a;
 }
 
 .cancel-edit{
-color:#a34a43
+  color:#a34a43;
 }
-
 
 /* ================================================= */
 /* EDITION */
 /* ================================================= */
 
 .edit-text{
-width:100%;
-padding:9px 11px;
-border:1px solid #286ca8;
-border-radius:9px;
-font-size:16px;
-outline:none
+  width:100%;
+  padding:9px 11px;
+  border:1px solid #286ca8;
+  border-radius:9px;
+  font-size:16px;
+  outline:none;
 }
 
 .edit-priority{
-width:auto;
-min-width:135px;
-padding:9px;
-border:1px solid #d4dce3;
-border-radius:9px;
-font-size:14px;
-margin-top:8px
+  width:auto;
+  min-width:135px;
+  padding:9px;
+  border:1px solid #d4dce3;
+  border-radius:9px;
+  font-size:14px;
+  margin-top:8px;
 }
 
 .edit-form{
-display:flex;
-flex-direction:column;
-gap:5px
+  display:flex;
+  flex-direction:column;
+  gap:5px;
 }
-
 
 /* ================================================= */
 /* CONNEXION */
 /* ================================================= */
 
 .login{
-max-width:440px;
-margin:8vh auto
+  max-width:440px;
+  margin:8vh auto;
 }
 
 .login input{
-margin-bottom:10px
+  margin-bottom:10px;
 }
 
 .login button{
-width:100%;
-margin-top:7px
+  width:100%;
+  margin-top:7px;
 }
 
 .msg{
-padding:10px;
-background:#f8ecea;
-color:#963d35;
-border-radius:10px;
-margin-top:10px
+  padding:10px;
+  background:#f8ecea;
+  color:#963d35;
+  border-radius:10px;
+  margin-top:10px;
 }
 
 #app{
-display:none
+  display:none;
 }
 
+/* ================================================= */
+/* CHOIX UTILISATEUR */
+/* ================================================= */
+
+#userChooser{
+  display:none;
+  max-width:520px;
+  margin:8vh auto;
+}
+
+.user-choice-title{
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.user-choice-subtitle{
+  text-align:center;
+  color:#71808c;
+  margin-bottom:20px;
+}
+
+.user-choice-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.user-choice{
+  min-height:90px;
+  border:2px solid transparent;
+  font-size:16px;
+}
+
+.user-choice.yannis{
+  background:#dcecff;
+  color:#1764a0;
+}
+
+.user-choice.jean-luc{
+  background:#f9dddd;
+  color:#a83232;
+}
+
+.user-choice.catherine{
+  background:#fff1b8;
+  color:#8a6a00;
+}
+
+.user-choice:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px #17324d18;
+}
+
+/* ================================================= */
+/* UTILISATEUR CONNECTE */
+/* ================================================= */
+
+.current-user{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.current-user-name{
+  font-weight:700;
+}
+
+.change-user{
+  background:#ffffff18;
+  color:#fff;
+  border:1px solid #ffffff40;
+  padding:7px 10px;
+  font-size:12px;
+}
 
 /* ================================================= */
 /* STATUT */
 /* ================================================= */
 
 .dot{
-display:inline-block;
-width:9px;
-height:9px;
-border-radius:50%;
-background:#e0a72b;
-margin-right:6px
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#e0a72b;
+  margin-right:6px;
 }
 
 .online .dot{
-background:#48a868
+  background:#48a868;
 }
 
+/* ================================================= */
+/* DISCUSSIONS */
+/* ================================================= */
+
+.discussion{
+  margin-top:12px;
+  border-top:1px solid #edf0f3;
+  padding-top:10px;
+}
+
+.discussion-title{
+  font-size:12px;
+  font-weight:700;
+  color:#71808c;
+  margin-bottom:8px;
+}
+
+.messages{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.message{
+  background:#f5f8fa;
+  border-radius:12px;
+  padding:9px 11px;
+  border-left:3px solid #d4dce3;
+}
+
+.message.mine{
+  background:#edf5fc;
+  border-left-color:#286ca8;
+}
+
+.message-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  margin-bottom:3px;
+}
+
+.message-author{
+  font-size:12px;
+  font-weight:700;
+  color:#29465d;
+}
+
+.message-date{
+  font-size:10px;
+  color:#8a969f;
+}
+
+.message-text{
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-size:14px;
+  line-height:1.4;
+}
+
+.empty-discussion{
+  color:#9aa5ae;
+  font-size:12px;
+  padding:5px 0;
+}
+
+.message-form{
+  display:flex;
+  gap:7px;
+  margin-top:9px;
+}
+
+.message-input{
+  min-height:42px;
+  height:42px;
+  resize:none;
+  font-size:14px;
+  padding:10px 11px;
+}
+
+.message-send{
+  flex:0 0 auto;
+  padding:10px 13px;
+}
+
+.message-status{
+  font-size:11px;
+  color:#7b8791;
+  min-height:14px;
+  margin-top:3px;
+}
 
 /* ================================================= */
-/* MOBILE */
+/* NOTES DU JOUR */
+/* ================================================= */
+
+.day-notes{
+  margin-top:10px;
+}
+
+.note-composer{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+
+.note-input{
+  min-height:45px;
+  height:45px;
+  resize:none;
+}
+
+.note-send{
+  flex:0 0 auto;
+}
+
+.notes-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.note{
+  background:#f5f8fa;
+  border-radius:12px;
+  padding:10px 12px;
+  border-left:3px solid #286ca8;
+}
+
+.note-head{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:4px;
+}
+
+.note-author{
+  font-size:12px;
+  font-weight:700;
+  color:#29465d;
+}
+
+.note-date{
+  font-size:10px;
+  color:#8a969f;
+}
+
+.note-text{
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-size:14px;
+  line-height:1.4;
+}
+
+/* ================================================= */
+/* RESPONSIVE */
 /* ================================================= */
 
 @media(max-width:800px){
 
-.grid{
-grid-template-columns:1fr
-}
+  .grid{
+    grid-template-columns:1fr;
+  }
 
-.add{
-grid-template-columns:1fr
-}
+  .add{
+    grid-template-columns:1fr;
+  }
 
-header{
-flex-direction:column
-}
+  header{
+    flex-direction:column;
+  }
 
-.task{
-grid-template-columns:40px 1fr auto
-}
+  .task{
+    grid-template-columns:40px 1fr auto;
+  }
 
-.edit-priority{
-width:100%
-}
+  .edit-priority{
+    width:100%;
+  }
+
+  .user-choice-grid{
+    grid-template-columns:1fr;
+  }
+
+  .message-form,
+  .note-composer{
+    flex-direction:column;
+  }
+
+  .message-send,
+  .note-send{
+    width:100%;
+  }
 
 }
 
@@ -504,78 +726,148 @@ width:100%
 <body>
 
 
-<!-- ========================= -->
+<!-- ================================================= -->
 <!-- CONNEXION -->
-<!-- ========================= -->
+<!-- ================================================= -->
 
 <div id="login" class="card login">
 
-<h1>WorkBoard</h1>
+  <h1>WorkBoard</h1>
 
-<p class="small">
-Utilise le même compte sur la tablette et le PC pour retrouver les mêmes tâches.
-</p>
+  <p class="small">
+    Connecte-toi avec ton compte WorkBoard.
+  </p>
 
-<input
-id="email"
-type="email"
-placeholder="Adresse e-mail"
->
+  <input
+    id="email"
+    type="email"
+    placeholder="Adresse e-mail"
+  >
 
-<input
-id="password"
-type="password"
-placeholder="Mot de passe"
->
+  <input
+    id="password"
+    type="password"
+    placeholder="Mot de passe"
+  >
 
-<button
-class="primary"
-id="signin"
->
-Se connecter
-</button>
+  <button
+    class="primary"
+    id="signin"
+  >
+    Se connecter
+  </button>
 
-<button
-class="secondary"
-id="signup"
->
-Créer mon compte
-</button>
+  <button
+    class="secondary"
+    id="signup"
+  >
+    Créer mon compte
+  </button>
 
-<div
-id="loginMsg"
-class="msg"
-style="display:none"
-></div>
+  <div
+    id="loginMsg"
+    class="msg"
+    style="display:none"
+  ></div>
 
 </div>
 
 
-<!-- ========================= -->
+<!-- ================================================= -->
+<!-- CHOIX UTILISATEUR -->
+<!-- ================================================= -->
+
+<div
+  id="userChooser"
+  class="card"
+>
+
+  <h1 class="user-choice-title">
+    Qui êtes-vous ?
+  </h1>
+
+  <div class="user-choice-subtitle">
+    Sélectionnez votre nom pour utiliser WorkBoard.
+  </div>
+
+  <div class="user-choice-grid">
+
+    <button
+      class="user-choice yannis"
+      data-user="Yannis"
+    >
+      Yannis
+    </button>
+
+    <button
+      class="user-choice jean-luc"
+      data-user="Jean-Luc"
+    >
+      Jean-Luc
+    </button>
+
+    <button
+      class="user-choice catherine"
+      data-user="Catherine"
+    >
+      Catherine
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ================================================= -->
 <!-- APPLICATION -->
-<!-- ========================= -->
+<!-- ================================================= -->
 
-<div id="app" class="app">
-
+<div
+  id="app"
+  class="app"
+>
 
 <header>
 
-<div>
+  <div>
 
-<h1>WorkBoard</h1>
+    <h1>WorkBoard</h1>
 
-<div class="sub">
-Tâches professionnelles — synchronisées
-</div>
+    <div class="sub">
+      Tâches professionnelles — synchronisées
+    </div>
 
-</div>
+    <div
+      class="current-user"
+      style="margin-top:10px"
+    >
 
-<div id="status">
+      <span>
+        Utilisateur :
+      </span>
 
-<span class="dot"></span>
-Connexion...
+      <span
+        id="currentUserName"
+        class="current-user-name"
+      ></span>
 
-</div>
+      <button
+        id="changeUser"
+        class="change-user"
+      >
+        Changer
+      </button>
+
+    </div>
+
+  </div>
+
+  <div id="status">
+
+    <span class="dot"></span>
+    Connexion...
+
+  </div>
 
 </header>
 
@@ -583,9 +875,9 @@ Connexion...
 <div class="grid">
 
 
-<!-- ========================= -->
+<!-- ================================================= -->
 <!-- COLONNE GAUCHE -->
-<!-- ========================= -->
+<!-- ================================================= -->
 
 <section>
 
@@ -594,91 +886,91 @@ Connexion...
 
 <div class="card">
 
-<h2>Vue du jour</h2>
+  <h2>
+    Vue du jour
+  </h2>
 
-<div class="stats">
+  <div class="stats">
 
+    <div class="stat">
 
-<div class="stat">
+      <div
+        class="num"
+        id="total"
+      >
+        0
+      </div>
 
-<div
-class="num"
-id="total"
->
-0
-</div>
+      <div class="small">
+        Tâches
+      </div>
 
-<div class="small">
-Tâches
-</div>
+    </div>
 
-</div>
+    <div class="stat">
 
+      <div
+        class="num"
+        id="done"
+      >
+        0
+      </div>
 
-<div class="stat">
+      <div class="small">
+        Terminées
+      </div>
 
-<div
-class="num"
-id="done"
->
-0
-</div>
+    </div>
 
-<div class="small">
-Terminées
-</div>
+    <div class="stat">
 
-</div>
+      <div
+        class="num"
+        id="remain"
+      >
+        0
+      </div>
 
+      <div class="small">
+        À faire
+      </div>
 
-<div class="stat">
+    </div>
 
-<div
-class="num"
-id="remain"
->
-0
-</div>
+  </div>
 
-<div class="small">
-À faire
-</div>
+  <div
+    style="
+      margin-top:18px;
+      font-weight:700;
+      display:flex;
+      justify-content:space-between
+    "
+  >
 
-</div>
+    <span>
+      Progression
+    </span>
 
+    <span id="pct">
+      0%
+    </span>
 
-</div>
+  </div>
 
+  <div class="bar">
 
-<div
-style="margin-top:18px;font-weight:700;display:flex;justify-content:space-between"
->
+    <div
+      class="fill"
+      id="fill"
+    ></div>
 
-<span>
-Progression
-</span>
+  </div>
 
-<span id="pct">
-0%
-</span>
-
-</div>
-
-
-<div class="bar">
-
-<div
-class="fill"
-id="fill"
-></div>
-
-</div>
-
-
-<div
-class="small"
-id="date"
-></div>
+  <div
+    class="small"
+    id="date"
+  ></div>
 
 </div>
 
@@ -687,247 +979,245 @@ id="date"
 
 <div class="card">
 
-<h2>
-Priorités
-</h2>
+  <h2>
+    Priorités
+  </h2>
 
-<div id="prioritySummary">
-Aucune tâche prioritaire.
+  <div id="prioritySummary">
+    Aucune tâche prioritaire.
+  </div>
+
 </div>
 
-</div>
 
-
-<!-- NOTES -->
+<!-- NOTES DE TRAVAIL -->
 
 <div class="card">
 
-<h2>
-Notes de travail
-</h2>
+  <h2>
+    Notes de travail
+  </h2>
 
-<textarea
-id="notes"
-placeholder="Réunions, informations importantes, rappels..."
-></textarea>
+  <div class="small" style="margin-bottom:12px">
+    Notes partagées entre Catherine, Jean-Luc et Yannis.
+  </div>
+
+  <div
+    id="notesList"
+    class="notes-list"
+  ></div>
+
+  <div class="note-composer">
+
+    <textarea
+      id="noteInput"
+      class="note-input"
+      placeholder="Écrire une note pour la journée..."
+    ></textarea>
+
+    <button
+      class="primary note-send"
+      id="addNote"
+    >
+      Envoyer
+    </button>
+
+  </div>
 
 </div>
 
 
 <button
-class="secondary"
-id="logout"
+  class="secondary"
+  id="logout"
 >
-Se déconnecter
+  Se déconnecter
 </button>
 
 
 </section>
 
 
-<!-- ========================= -->
+<!-- ================================================= -->
 <!-- COLONNE DROITE -->
-<!-- ========================= -->
+<!-- ================================================= -->
 
 <section>
 
 
-<!-- ========================= -->
 <!-- AJOUTER UNE TACHE -->
-<!-- ========================= -->
 
 <div class="card">
 
-<h2>
-Ajouter une tâche
-</h2>
+  <h2>
+    Ajouter une tâche
+  </h2>
 
+  <div class="add">
 
-<div class="add">
+    <input
+      id="taskInput"
+      placeholder="Ex. Envoyer le dossier au client..."
+    >
 
+    <select id="priority">
 
-<input
-id="taskInput"
-placeholder="Ex. Envoyer le dossier au client..."
->
+      <option value="high">
+        Priorité haute
+      </option>
 
+      <option
+        value="med"
+        selected
+      >
+        Priorité normale
+      </option>
 
-<select id="priority">
+      <option value="low">
+        Priorité basse
+      </option>
 
-<option value="high">
-Priorité haute
-</option>
+    </select>
 
-<option value="med" selected>
-Priorité normale
-</option>
+    <div
+      class="assignees"
+      id="assignees"
+    >
 
-<option value="low">
-Priorité basse
-</option>
+      <label class="person-checkbox yannis">
 
-</select>
+        <input
+          type="checkbox"
+          value="Yannis"
+          checked
+        >
 
+        <span>
+          Yannis
+        </span>
 
-<div
-class="assignees"
-id="assignees"
->
+      </label>
 
+      <label class="person-checkbox jean-luc">
 
-<label class="person-checkbox yannis">
+        <input
+          type="checkbox"
+          value="Jean-Luc"
+        >
 
-<input
-type="checkbox"
-value="Yannis"
-checked
->
+        <span>
+          Jean-Luc
+        </span>
 
-<span>
-Yannis
-</span>
+      </label>
 
-</label>
+      <label class="person-checkbox catherine">
 
+        <input
+          type="checkbox"
+          value="Catherine"
+        >
 
-<label class="person-checkbox jean-luc">
+        <span>
+          Catherine
+        </span>
 
-<input
-type="checkbox"
-value="Jean-Luc"
->
+      </label>
 
-<span>
-Jean-Luc
-</span>
+    </div>
 
-</label>
+  </div>
 
-
-<label class="person-checkbox catherine">
-
-<input
-type="checkbox"
-value="Catherine"
->
-
-<span>
-Catherine
-</span>
-
-</label>
-
-
-</div>
-
-
-</div>
-
-
-<button
-class="primary"
-id="add"
-style="margin-top:9px"
->
-+ Ajouter la tâche
-</button>
+  <button
+    class="primary"
+    id="add"
+    style="margin-top:9px"
+  >
+    + Ajouter la tâche
+  </button>
 
 </div>
 
 
-<!-- ========================= -->
 <!-- LISTE DES TACHES -->
-<!-- ========================= -->
 
 <div class="card">
 
+  <div
+    style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap
+    "
+  >
 
-<div
-style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"
->
+    <h2>
+      Tâches
+    </h2>
 
-<h2>
-Tâches
-</h2>
+    <div class="filters">
 
+      <button
+        class="active"
+        id="all"
+      >
+        Toutes
+      </button>
 
-<!-- FILTRE ETAT -->
+      <button id="todo">
+        À faire
+      </button>
 
-<div class="filters">
+      <button id="doneFilter">
+        Terminées
+      </button>
 
-<button
-class="active"
-id="all"
->
-Toutes
-</button>
+    </div>
 
-<button
-id="todo"
->
-À faire
-</button>
-
-<button
-id="doneFilter"
->
-Terminées
-</button>
-
-</div>
-
-</div>
+  </div>
 
 
-<!-- FILTRE RESPONSABLE -->
-
-<div
-style="margin-top:5px;font-weight:700;font-size:14px"
->
-Responsable :
-</div>
-
-
-<div
-class="filters"
-id="peopleFilters"
->
+  <div
+    style="
+      margin-top:5px;
+      font-weight:700;
+      font-size:14px
+    "
+  >
+    Responsable :
+  </div>
 
 
-<button
-class="active"
-id="allPeople"
->
-Tous
-</button>
+  <div
+    class="filters"
+    id="peopleFilters"
+  >
+
+    <button
+      class="active"
+      id="allPeople"
+    >
+      Tous
+    </button>
+
+    <button id="jeanLucFilter">
+      Jean-Luc
+    </button>
+
+    <button id="catherineFilter">
+      Catherine
+    </button>
+
+    <button id="yannisFilter">
+      Yannis
+    </button>
+
+  </div>
 
 
-<button
-id="jeanLucFilter"
->
-Jean-Luc
-</button>
-
-
-<button
-id="catherineFilter"
->
-Catherine
-</button>
-
-
-<button
-id="yannisFilter"
->
-Yannis
-</button>
-
-
-</div>
-
-
-<div id="tasks"></div>
-
+  <div id="tasks"></div>
 
 </div>
 
@@ -946,112 +1236,212 @@ Yannis
 /* FIREBASE */
 /* ================================================= */
 
-
 import {
-initializeApp
+  initializeApp
 }
 from
 "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
 
 import {
-getAuth,
-onAuthStateChanged,
-signInWithEmailAndPassword,
-createUserWithEmailAndPassword,
-signOut
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
 }
 from
 "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 
 import {
-getFirestore,
-doc,
-onSnapshot,
-setDoc,
-runTransaction
+  getFirestore,
+  doc,
+  onSnapshot,
+  setDoc,
+  runTransaction
 }
 from
 "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 
 import {
-firebaseConfig
+  firebaseConfig
 }
 from
 "./firebase-config.js";
 
 
-const app=
-initializeApp(firebaseConfig);
+const app =
+  initializeApp(firebaseConfig);
 
 
-const auth=
-getAuth(app);
+const auth =
+  getAuth(app);
 
 
-const db=
-getFirestore(app);
+const db =
+  getFirestore(app);
 
 
-const day=
-new Date()
-.toISOString()
-.slice(0,10);
+/* ================================================= */
+/* VARIABLES */
+/* ================================================= */
+
+const day =
+  new Date()
+    .toISOString()
+    .slice(0,10);
 
 
-let tasks=[];
+let tasks = [];
 
-let notes="";
+let notes = [];
 
-let filter="all";
+let filter = "all";
 
-let personFilter="all";
+let personFilter = "all";
 
-let unsub=null;
+let unsub = null;
 
-let timer=null;
+let currentUser = null;
 
-
-/* TIMER POUR LES COMMENTAIRES */
-
-const commentTimers={};
+let selectedUser =
+  localStorage.getItem("workboardUser") || null;
 
 
-const $=
-x=>document.getElementById(x);
+/* ================================================= */
+/* UTILITAIRE */
+/* ================================================= */
+
+const $ =
+  x => document.getElementById(x);
 
 
 /* ================================================= */
 /* DATE */
 /* ================================================= */
 
-
-$("date").textContent=
+$("date").textContent =
 
 new Intl.DateTimeFormat(
-"fr-FR",
-{
-weekday:"long",
-day:"numeric",
-month:"long",
-year:"numeric"
-}
+  "fr-FR",
+  {
+    weekday:"long",
+    day:"numeric",
+    month:"long",
+    year:"numeric"
+  }
 ).format(new Date());
 
 
 /* ================================================= */
-/* MESSAGE */
+/* NOM UTILISATEUR */
 /* ================================================= */
 
+function setCurrentUser(name){
+
+  selectedUser = name;
+
+  localStorage.setItem(
+    "workboardUser",
+    name
+  );
+
+  $("currentUserName").textContent =
+    name;
+
+}
+
+
+/* ================================================= */
+/* CHOIX UTILISATEUR */
+/* ================================================= */
+
+function showUserChooser(){
+
+  $("login").style.display =
+    "none";
+
+  $("app").style.display =
+    "none";
+
+  $("userChooser").style.display =
+    "block";
+
+}
+
+
+function showApplication(){
+
+  $("login").style.display =
+    "none";
+
+  $("userChooser").style.display =
+    "none";
+
+  $("app").style.display =
+    "block";
+
+  $("currentUserName").textContent =
+    selectedUser;
+
+}
+
+
+/* ================================================= */
+/* BOUTONS UTILISATEURS */
+/* ================================================= */
+
+document
+  .querySelectorAll(".user-choice")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const name =
+          button.dataset.user;
+
+        setCurrentUser(name);
+
+        showApplication();
+
+        if(currentUser){
+
+          listen(currentUser.uid);
+
+        }
+
+      }
+    );
+
+  });
+
+
+/* ================================================= */
+/* CHANGER D'UTILISATEUR */
+/* ================================================= */
+
+$("changeUser").onclick = () => {
+
+  showUserChooser();
+
+};
+
+
+/* ================================================= */
+/* MESSAGE LOGIN */
+/* ================================================= */
 
 function showMsg(x){
 
-$("loginMsg").textContent=x;
+  $("loginMsg").textContent =
+    x;
 
-$("loginMsg").style.display=
-"block";
+  $("loginMsg").style.display =
+    "block";
 
 }
 
@@ -1060,25 +1450,29 @@ $("loginMsg").style.display=
 /* ERREURS FIREBASE */
 /* ================================================= */
 
-
 function friendly(c){
 
-if(
-c.includes("invalid-credential")
-)
-return"e-mail ou mot de passe incorrect.";
+  if(
+    c.includes("invalid-credential")
+  )
+    return "e-mail ou mot de passe incorrect.";
 
-if(
-c.includes("email-already")
-)
-return"ce compte existe déjà.";
+  if(
+    c.includes("email-already")
+  )
+    return "ce compte existe déjà.";
 
-if(
-c.includes("weak-password")
-)
-return"mot de passe trop court.";
+  if(
+    c.includes("weak-password")
+  )
+    return "mot de passe trop court.";
 
-return"Une erreur est survenue.";
+  if(
+    c.includes("invalid-email")
+  )
+    return "adresse e-mail invalide.";
+
+  return "Une erreur est survenue.";
 
 }
 
@@ -1087,678 +1481,1471 @@ return"Une erreur est survenue.";
 /* CONNEXION */
 /* ================================================= */
 
-
 $("signin").addEventListener(
-"click",
-async e=>{
+  "click",
+  async e => {
 
-e.preventDefault();
+    e.preventDefault();
 
+    const email =
+      $("email")
+        .value
+        .trim();
 
-const email=
-$("email")
-.value
-.trim();
+    const password =
+      $("password")
+        .value;
 
+    if(!email || !password){
 
-const password=
-$("password")
-.value;
+      showMsg(
+        "Merci de renseigner l'e-mail et le mot de passe."
+      );
 
+      return;
 
-if(!email||!password){
+    }
 
-showMsg(
-"Merci de renseigner l'e-mail et le mot de passe."
+    const button =
+      $("signin");
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      "Connexion...";
+
+    try{
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }
+    catch(e){
+
+      console.error(
+        "Erreur de connexion Firebase :",
+        e
+      );
+
+      showMsg(
+        friendly(e.code || "")
+      );
+
+    }
+    finally{
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "Se connecter";
+
+    }
+
+  }
 );
-
-return;
-
-}
-
-
-const button=
-$("signin");
-
-
-button.disabled=
-true;
-
-button.textContent=
-"Connexion...";
-
-
-try{
-
-await signInWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-}
-catch(e){
-
-console.error(
-"Erreur de connexion Firebase :",
-e
-);
-
-showMsg(
-friendly(e.code||"")
-);
-
-}
-finally{
-
-button.disabled=
-false;
-
-button.textContent=
-"Se connecter";
-
-}
-
-});
 
 
 /* ================================================= */
-/* CREATION DU COMPTE */
+/* CREATION COMPTE */
 /* ================================================= */
-
 
 $("signup").addEventListener(
-"click",
-async e=>{
+  "click",
+  async e => {
 
-e.preventDefault();
+    e.preventDefault();
 
+    const email =
+      $("email")
+        .value
+        .trim();
 
-const email=
-$("email")
-.value
-.trim();
+    const password =
+      $("password")
+        .value;
 
+    if(!email || !password){
 
-const password=
-$("password")
-.value;
+      showMsg(
+        "Merci de renseigner l'e-mail et le mot de passe."
+      );
 
+      return;
 
-if(!email||!password){
+    }
 
-showMsg(
-"Merci de renseigner l'e-mail et le mot de passe."
+    try{
+
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }
+    catch(e){
+
+      console.error(
+        "Erreur de création :",
+        e
+      );
+
+      showMsg(
+        friendly(e.code || "")
+      );
+
+    }
+
+  }
 );
-
-return;
-
-}
-
-
-try{
-
-await createUserWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-}
-catch(e){
-
-console.error(
-"Erreur de création :",
-e
-);
-
-showMsg(
-friendly(e.code||"")
-);
-
-}
-
-});
 
 
 /* ================================================= */
 /* DECONNEXION */
 /* ================================================= */
 
-
-$("logout").onclick=
-()=>signOut(auth);
+$("logout").onclick =
+  () => signOut(auth);
 
 
 /* ================================================= */
 /* AUTHENTIFICATION */
 /* ================================================= */
 
-
 onAuthStateChanged(
-auth,
-u=>{
+  auth,
+  user => {
 
-if(!u){
+    currentUser =
+      user;
 
-$("login").style.display=
-"block";
+    if(!user){
 
-$("app").style.display=
-"none";
+      if(unsub){
 
-return;
+        unsub();
 
-}
+        unsub = null;
+
+      }
+
+      $("login").style.display =
+        "block";
+
+      $("userChooser").style.display =
+        "none";
+
+      $("app").style.display =
+        "none";
+
+      $("status").innerHTML =
+        '<span class="dot"></span>Déconnecté';
+
+      $("status").className = "";
+
+      return;
+
+    }
 
 
-$("login").style.display=
-"none";
+    $("status").innerHTML =
+      '<span class="dot"></span>Connexion...';
 
-$("app").style.display=
-"block";
-
-
-$("status").innerHTML=
-'<span class="dot"></span>Synchronisation active';
-
-$("status").className=
-"online";
+    $("status").className =
+      "online";
 
 
-listen(u.uid);
+    if(selectedUser){
 
-});
+      showApplication();
+
+      listen(user.uid);
+
+    }
+    else{
+
+      showUserChooser();
+
+    }
+
+  }
+);
 
 
 /* ================================================= */
 /* REFERENCE FIRESTORE */
 /* ================================================= */
 
-
 function ref(uid){
 
-return doc(
-db,
-"users",
-uid,
-"days",
-day
-);
+  return doc(
+    db,
+    "users",
+    uid,
+    "days",
+    day
+  );
 
 }
 
 
 /* ================================================= */
-/* ECOUTE DES DONNEES */
+/* NORMALISATION DES COMMENTAIRES */
 /* ================================================= */
 
+function normalizeComments(task){
+
+  if(
+    Array.isArray(task.comments)
+  ){
+
+    return task.comments;
+
+  }
+
+
+  /*
+    Compatibilité avec l'ancien système :
+    comment: "ancien commentaire"
+  */
+
+  if(
+    typeof task.comment === "string" &&
+    task.comment.trim()
+  ){
+
+    return [
+      {
+        id:crypto.randomUUID(),
+        author:"Utilisateur",
+        text:task.comment,
+        createdAt:Date.now()
+      }
+    ];
+
+  }
+
+
+  return [];
+
+}
+
+
+/* ================================================= */
+/* ECOUTE FIRESTORE */
+/* ================================================= */
 
 function listen(uid){
 
-if(unsub)
-unsub();
+  if(unsub)
+    unsub();
 
 
-unsub=
-onSnapshot(
-ref(uid),
-s=>{
+  unsub =
+    onSnapshot(
+      ref(uid),
 
-const d=
-s.exists()
-?s.data()
-:{};
+      snapshot => {
 
-
-tasks=
-Array.isArray(d.tasks)
-?d.tasks
-:[];
+        const data =
+          snapshot.exists()
+            ? snapshot.data()
+            : {};
 
 
-notes=
-d.notes||"";
+        tasks =
+          Array.isArray(data.tasks)
+            ? data.tasks
+            : [];
 
 
-$("notes").value=
-notes;
+        /*
+          Compatibilité avec l'ancien champ notes.
+          Si notes est encore une chaîne, on la transforme
+          en une première note.
+        */
+
+        if(
+          Array.isArray(data.notes)
+        ){
+
+          notes =
+            data.notes;
+
+        }
+        else if(
+          typeof data.notes === "string" &&
+          data.notes.trim()
+        ){
+
+          notes = [
+            {
+              id:crypto.randomUUID(),
+              author:"Utilisateur",
+              text:data.notes,
+              createdAt:Date.now()
+            }
+          ];
+
+        }
+        else{
+
+          notes = [];
+
+        }
 
 
-if(!s.exists()){
+        $("status").innerHTML =
+          '<span class="dot"></span>Synchronisation active';
 
-setDoc(
-ref(uid),
-{
-notes:"",
-date:day,
-updatedAt:Date.now()
-},
-{
-merge:true
-}
-);
-
-}
+        $("status").className =
+          "online";
 
 
-render();
+        render();
 
-},
-()=>{
+        renderNotes();
 
-$("status").innerHTML=
-'<span class="dot"></span>Erreur de synchronisation';
 
-$("status").className=
-"";
+        if(!snapshot.exists()){
 
-}
-);
+          setDoc(
+            ref(uid),
+            {
+              tasks:[],
+              notes:[],
+              date:day,
+              updatedAt:Date.now()
+            },
+            {
+              merge:true
+            }
+          );
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          "Erreur Firestore :",
+          error
+        );
+
+        $("status").innerHTML =
+          '<span class="dot"></span>Erreur de synchronisation';
+
+        $("status").className =
+          "";
+
+      }
+
+    );
 
 }
 
 
 /* ================================================= */
-/* SAUVEGARDE */
-/* ================================================= */
-
-
-async function save(){
-
-if(auth.currentUser){
-
-await setDoc(
-ref(auth.currentUser.uid),
-{
-notes,
-date:day,
-updatedAt:Date.now()
-},
-{
-merge:true
-}
-);
-
-}
-
-}
-
-/* ================================================= */
-/* MODIFICATION SECURISEE D'UNE TACHE */
-/* ================================================= */
-
-async function updateTaskSafely(id,updater){
-
-if(!auth.currentUser)
-return;
-
-const taskRef=ref(auth.currentUser.uid);
-
-await runTransaction(
-db,
-async transaction=>{
-
-const snap=await transaction.get(taskRef);
-
-const data=snap.exists()
-?snap.data()
-:{};
-
-const currentTasks=
-Array.isArray(data.tasks)
-?data.tasks
-:[];
-
-const index=
-currentTasks.findIndex(
-t=>t.id===id
-);
-
-if(index===-1)
-return;
-
-const updatedTask=
-updater(
-{...currentTasks[index]}
-);
-
-const newTasks=
-currentTasks.map(
-(t,i)=>
-i===index
-?updatedTask
-:t
-);
-
-transaction.set(
-taskRef,
-{
-tasks:newTasks,
-date:day,
-updatedAt:Date.now()
-},
-{
-merge:true
-}
-);
-
-}
-);
-
-}
-
-/* ================================================= */
-/* AJOUT SECURISE D'UNE TACHE */
+/* AJOUT TACHE SECURISE */
 /* ================================================= */
 
 async function addTaskSafely(task){
 
-if(!auth.currentUser)
-return;
+  if(!currentUser)
+    return;
 
-const taskRef=ref(auth.currentUser.uid);
 
-await runTransaction(
-db,
-async transaction=>{
+  const taskRef =
+    ref(currentUser.uid);
 
-const snap=await transaction.get(taskRef);
 
-const data=snap.exists()
-?snap.data()
-:{};
+  await runTransaction(
+    db,
+    async transaction => {
 
-const currentTasks=
-Array.isArray(data.tasks)
-?data.tasks
-:[];
+      const snap =
+        await transaction.get(taskRef);
 
-transaction.set(
-taskRef,
-{
-tasks:[
-...currentTasks,
-task
-],
-date:day,
-updatedAt:Date.now()
-},
-{
-merge:true
+
+      const data =
+        snap.exists()
+          ? snap.data()
+          : {};
+
+
+      const currentTasks =
+        Array.isArray(data.tasks)
+          ? data.tasks
+          : [];
+
+
+      transaction.set(
+        taskRef,
+        {
+          tasks:[
+            ...currentTasks,
+            task
+          ],
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
+
+    }
+  );
+
 }
-);
 
-}
-);
-
-}
 
 /* ================================================= */
-/* SUPPRESSION SECURISEE */
+/* MODIFICATION TACHE SECURISEE */
+/* ================================================= */
+
+async function updateTaskSafely(
+  id,
+  updater
+){
+
+  if(!currentUser)
+    return;
+
+
+  const taskRef =
+    ref(currentUser.uid);
+
+
+  await runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(taskRef);
+
+
+      if(!snap.exists())
+        return;
+
+
+      const data =
+        snap.data();
+
+
+      const currentTasks =
+        Array.isArray(data.tasks)
+          ? data.tasks
+          : [];
+
+
+      const index =
+        currentTasks.findIndex(
+          t => t.id === id
+        );
+
+
+      if(index === -1)
+        return;
+
+
+      const updatedTask =
+        updater(
+          {
+            ...currentTasks[index]
+          }
+        );
+
+
+      const newTasks =
+        currentTasks.map(
+          (task,i) =>
+            i === index
+              ? updatedTask
+              : task
+        );
+
+
+      transaction.set(
+        taskRef,
+        {
+          tasks:newTasks,
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* ================================================= */
+/* SUPPRESSION TACHE SECURISEE */
 /* ================================================= */
 
 async function deleteTaskSafely(id){
 
-if(!auth.currentUser)
-return;
+  if(!currentUser)
+    return;
 
-const taskRef=ref(auth.currentUser.uid);
 
-await runTransaction(
-db,
-async transaction=>{
+  const taskRef =
+    ref(currentUser.uid);
 
-const snap=await transaction.get(taskRef);
 
-if(!snap.exists())
-return;
+  await runTransaction(
+    db,
+    async transaction => {
 
-const data=snap.data();
+      const snap =
+        await transaction.get(taskRef);
 
-const currentTasks=
-Array.isArray(data.tasks)
-?data.tasks
-:[];
 
-const newTasks=
-currentTasks.filter(
-t=>t.id!==id
-);
+      if(!snap.exists())
+        return;
 
-transaction.set(
-taskRef,
-{
-tasks:newTasks,
-date:day,
-updatedAt:Date.now()
-},
-{
-merge:true
-}
-);
 
-}
-);
+      const data =
+        snap.data();
 
-},
-{
-merge:true
-}
-);
 
-}
+      const currentTasks =
+        Array.isArray(data.tasks)
+          ? data.tasks
+          : [];
+
+
+      const newTasks =
+        currentTasks.filter(
+          task => task.id !== id
+        );
+
+
+      transaction.set(
+        taskRef,
+        {
+          tasks:newTasks,
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
+
+    }
+  );
 
 }
 
 
 /* ================================================= */
-/* AJOUT TACHE */
+/* AJOUTER UNE TACHE */
 /* ================================================= */
 
+$("add").onclick =
+  async () => {
 
-$("add").onclick=
-async()=>{
-
-const i=
-$("taskInput");
-
-
-const t=
-i.value.trim();
+    const input =
+      $("taskInput");
 
 
-if(!t)
-return;
+    const text =
+      input.value.trim();
 
 
-/* PERSONNES SELECTIONNEES */
-
-const selectedPeople=
-
-Array.from(
-document.querySelectorAll(
-"#assignees input:checked"
-)
-).map(
-input=>input.value
-);
+    if(!text)
+      return;
 
 
-if(!selectedPeople.length){
+    const selectedPeople =
 
-alert(
-"Merci de sélectionner au moins une personne."
-);
+      Array.from(
+        document.querySelectorAll(
+          "#assignees input:checked"
+        )
+      ).map(
+        input => input.value
+      );
 
-return;
 
-}
+    if(!selectedPeople.length){
+
+      alert(
+        "Merci de sélectionner au moins une personne."
+      );
+
+      return;
+
+    }
 
 
-/* CREATION */
+    const newTask = {
 
-const newTask={
-id:crypto.randomUUID(),
-text:t,
-priority:$("priority").value,
-assignee:selectedPeople,
-done:false,
-comment:""
-};
+      id:crypto.randomUUID(),
 
-await addTaskSafely(newTask);
+      text:text,
 
-i.value="";
+      priority:
+        $("priority").value,
 
-};
+      assignee:
+        selectedPeople,
+
+      done:false,
+
+      comments:[]
+
+    };
+
+
+    try{
+
+      await addTaskSafely(
+        newTask
+      );
+
+      input.value = "";
+
+    }
+    catch(e){
+
+      console.error(
+        "Erreur ajout tâche :",
+        e
+      );
+
+      alert(
+        "Impossible d'ajouter la tâche."
+      );
+
+    }
+
+  };
 
 
 /* ================================================= */
 /* ENTER POUR AJOUTER */
 /* ================================================= */
 
+$("taskInput").onkeydown =
+  e => {
 
-$("taskInput").onkeydown=
-e=>{
+    if(
+      e.key === "Enter"
+    ){
 
-if(e.key==="Enter")
-$("add").click();
+      e.preventDefault();
 
-};
+      $("add").click();
 
+    }
 
-/* ================================================= */
-/* NOTES */
-/* ================================================= */
-
-
-$("notes").oninput=()=>{
-
-clearTimeout(timer);
-
-
-timer=
-setTimeout(
-()=>{
-
-notes=
-$("notes").value;
-
-save();
-
-},
-500
-);
-
-};
+  };
 
 
 /* ================================================= */
-/* COMMENTAIRE D'UNE TACHE */
+/* AJOUT NOTE SECURISE */
 /* ================================================= */
 
+async function addNoteSafely(text){
 
-async function saveComment(id,comment){
-
-await updateTaskSafely(
-id,
-task=>({
-...task,
-comment:comment
-})
-);
-
-}
-:t
-);
+  if(!currentUser || !selectedUser)
+    return;
 
 
-await save();
-
-}
-
-
-/* ================================================= */
-/* COMMENTAIRE AUTOMATIQUE */
-/* ================================================= */
+  const noteRef =
+    ref(currentUser.uid);
 
 
-function updateComment(id,comment,input,status){
+  const newNote = {
 
-if(commentTimers[id])
-clearTimeout(commentTimers[id]);
+    id:crypto.randomUUID(),
+
+    author:selectedUser,
+
+    text:text,
+
+    createdAt:Date.now()
+
+  };
 
 
-status.textContent=
-"Enregistrement...";
+  await runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(
+          noteRef
+        );
 
 
-commentTimers[id]=
-setTimeout(
-async()=>{
+      const data =
+        snap.exists()
+          ? snap.data()
+          : {};
 
-try{
 
-await saveComment(
-id,
-comment
-);
+      let currentNotes = [];
 
-status.textContent=
-"✓ Enregistré";
 
-setTimeout(
-()=>{
+      if(
+        Array.isArray(data.notes)
+      ){
 
-if(status)
-status.textContent="";
+        currentNotes =
+          data.notes;
 
-},
-1200
-);
+      }
+      else if(
+        typeof data.notes === "string" &&
+        data.notes.trim()
+      ){
 
-}
-catch(e){
+        currentNotes = [
+          {
+            id:crypto.randomUUID(),
+            author:"Utilisateur",
+            text:data.notes,
+            createdAt:Date.now()
+          }
+        ];
 
-console.error(
-"Erreur sauvegarde commentaire :",
-e
-);
+      }
 
-status.textContent=
-"Erreur de sauvegarde";
 
-}
+      transaction.set(
+        noteRef,
+        {
+          notes:[
+            ...currentNotes,
+            newNote
+          ],
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
 
-},
-500
-);
+    }
+  );
 
 }
 
 
 /* ================================================= */
-/* TERMINER UNE TACHE */
+/* ENVOYER NOTE */
 /* ================================================= */
 
+$("addNote").onclick =
+  async () => {
+
+    const input =
+      $("noteInput");
+
+
+    const text =
+      input.value.trim();
+
+
+    if(!text)
+      return;
+
+
+    const button =
+      $("addNote");
+
+
+    button.disabled =
+      true;
+
+
+    try{
+
+      await addNoteSafely(
+        text
+      );
+
+      input.value = "";
+
+    }
+    catch(e){
+
+      console.error(
+        "Erreur ajout note :",
+        e
+      );
+
+      alert(
+        "Impossible d'enregistrer la note."
+      );
+
+    }
+    finally{
+
+      button.disabled =
+        false;
+
+    }
+
+  };
+
+
+/* ================================================= */
+/* ENTER POUR NOTE */
+/* ================================================= */
+
+$("noteInput").onkeydown =
+  e => {
+
+    if(
+      e.key === "Enter" &&
+      !e.shiftKey
+    ){
+
+      e.preventDefault();
+
+      $("addNote").click();
+
+    }
+
+  };
+
+
+/* ================================================= */
+/* AFFICHAGE NOTES */
+/* ================================================= */
+
+function renderNotes(){
+
+  const box =
+    $("notesList");
+
+
+  box.innerHTML = "";
+
+
+  if(!notes.length){
+
+    box.innerHTML =
+      '<div class="empty-discussion">Aucune note pour le moment.</div>';
+
+    return;
+
+  }
+
+
+  const sorted =
+    [...notes].sort(
+      (a,b) =>
+        (a.createdAt || 0) -
+        (b.createdAt || 0)
+    );
+
+
+  sorted.forEach(
+    note => {
+
+      const element =
+        document.createElement(
+          "div"
+        );
+
+
+      element.className =
+        "note";
+
+
+      const head =
+        document.createElement(
+          "div"
+        );
+
+
+      head.className =
+        "note-head";
+
+
+      const author =
+        document.createElement(
+          "span"
+        );
+
+
+      author.className =
+        "note-author";
+
+
+      author.textContent =
+        note.author || "Utilisateur";
+
+
+      const date =
+        document.createElement(
+          "span"
+        );
+
+
+      date.className =
+        "note-date";
+
+
+      date.textContent =
+        formatDate(
+          note.createdAt
+        );
+
+
+      const text =
+        document.createElement(
+          "div"
+        );
+
+
+      text.className =
+        "note-text";
+
+
+      text.textContent =
+        note.text || "";
+
+
+      head.append(
+        author,
+        date
+      );
+
+
+      element.append(
+        head,
+        text
+      );
+
+
+      box.append(
+        element
+      );
+
+    }
+  );
+
+}
+
+
+/* ================================================= */
+/* FORMAT DATE */
+/* ================================================= */
+
+function formatDate(timestamp){
+
+  if(!timestamp)
+    return "";
+
+
+  return new Intl.DateTimeFormat(
+    "fr-FR",
+    {
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric",
+      hour:"2-digit",
+      minute:"2-digit"
+    }
+  ).format(
+    new Date(timestamp)
+  );
+
+}
+
+
+/* ================================================= */
+/* AJOUT COMMENTAIRE SECURISE */
+/* ================================================= */
+
+async function addCommentSafely(
+  taskId,
+  text
+){
+
+  if(
+    !currentUser ||
+    !selectedUser
+  )
+    return;
+
+
+  const taskRef =
+    ref(currentUser.uid);
+
+
+  const newComment = {
+
+    id:crypto.randomUUID(),
+
+    author:selectedUser,
+
+    text:text,
+
+    createdAt:Date.now()
+
+  };
+
+
+  await runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(
+          taskRef
+        );
+
+
+      if(!snap.exists())
+        return;
+
+
+      const data =
+        snap.data();
+
+
+      const currentTasks =
+        Array.isArray(data.tasks)
+          ? data.tasks
+          : [];
+
+
+      const index =
+        currentTasks.findIndex(
+          task =>
+            task.id === taskId
+        );
+
+
+      if(index === -1)
+        return;
+
+
+      const task =
+        {
+          ...currentTasks[index]
+        };
+
+
+      let comments =
+        normalizeComments(
+          task
+        );
+
+
+      comments = [
+        ...comments,
+        newComment
+      ];
+
+
+      task.comments =
+        comments;
+
+
+      /*
+        On supprime l'ancien champ
+        comment si présent.
+      */
+
+      delete task.comment;
+
+
+      const newTasks =
+        currentTasks.map(
+          (item,i) =>
+            i === index
+              ? task
+              : item
+        );
+
+
+      transaction.set(
+        taskRef,
+        {
+          tasks:newTasks,
+          date:day,
+          updatedAt:Date.now()
+        },
+        {
+          merge:true
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* ================================================= */
+/* AFFICHAGE COMMENTAIRES */
+/* ================================================= */
+
+function createDiscussion(
+  task
+){
+
+  const container =
+    document.createElement(
+      "div"
+    );
+
+
+  container.className =
+    "discussion";
+
+
+  const title =
+    document.createElement(
+      "div"
+    );
+
+
+  title.className =
+    "discussion-title";
+
+
+  title.textContent =
+    "Discussion";
+
+
+  const messages =
+    document.createElement(
+      "div"
+    );
+
+
+  messages.className =
+    "messages";
+
+
+  const comments =
+    normalizeComments(
+      task
+    );
+
+
+  if(!comments.length){
+
+    const empty =
+      document.createElement(
+        "div"
+      );
+
+
+    empty.className =
+      "empty-discussion";
+
+
+    empty.textContent =
+      "Aucun commentaire pour le moment.";
+
+
+    messages.append(
+      empty
+    );
+
+  }
+  else{
+
+    const sorted =
+      [...comments].sort(
+        (a,b) =>
+          (a.createdAt || 0) -
+          (b.createdAt || 0)
+      );
+
+
+    sorted.forEach(
+      comment => {
+
+        const message =
+          document.createElement(
+            "div"
+          );
+
+
+        message.className =
+          "message";
+
+
+        if(
+          comment.author ===
+          selectedUser
+        ){
+
+          message.classList.add(
+            "mine"
+          );
+
+        }
+
+
+        const head =
+          document.createElement(
+            "div"
+          );
+
+
+        head.className =
+          "message-head";
+
+
+        const author =
+          document.createElement(
+            "span"
+          );
+
+
+        author.className =
+          "message-author";
+
+
+        author.textContent =
+          comment.author ||
+          "Utilisateur";
+
+
+        const date =
+          document.createElement(
+            "span"
+          );
+
+
+        date.className =
+          "message-date";
+
+
+        date.textContent =
+          formatDate(
+            comment.createdAt
+          );
+
+
+        const text =
+          document.createElement(
+            "div"
+          );
+
+
+        text.className =
+          "message-text";
+
+
+        text.textContent =
+          comment.text || "";
+
+
+        head.append(
+          author,
+          date
+        );
+
+
+        message.append(
+          head,
+          text
+        );
+
+
+        messages.append(
+          message
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ================================================= */
+  /* FORMULAIRE COMMENTAIRE */
+  /* ================================================= */
+
+  const form =
+    document.createElement(
+      "div"
+    );
+
+
+  form.className =
+    "message-form";
+
+
+  const input =
+    document.createElement(
+      "textarea"
+    );
+
+
+  input.className =
+    "message-input";
+
+
+  input.placeholder =
+    "Écrire un commentaire...";
+
+
+  const send =
+    document.createElement(
+      "button"
+    );
+
+
+  send.className =
+    "primary message-send";
+
+
+  send.textContent =
+    "Envoyer";
+
+
+  const status =
+    document.createElement(
+      "div"
+    );
+
+
+  status.className =
+    "message-status";
+
+
+  async function sendComment(){
+
+    const text =
+      input.value.trim();
+
+
+    if(!text)
+      return;
+
+
+    send.disabled =
+      true;
+
+
+    status.textContent =
+      "Enregistrement...";
+
+
+    try{
+
+      await addCommentSafely(
+        task.id,
+        text
+      );
+
+      input.value = "";
+
+      status.textContent =
+        "✓ Envoyé";
+
+
+      setTimeout(
+        () => {
+
+          status.textContent =
+            "";
+
+        },
+        1200
+      );
+
+    }
+    catch(e){
+
+      console.error(
+        "Erreur commentaire :",
+        e
+      );
+
+      status.textContent =
+        "Erreur de sauvegarde";
+
+    }
+    finally{
+
+      send.disabled =
+        false;
+
+    }
+
+  }
+
+
+  send.onclick =
+    sendComment;
+
+
+  input.onkeydown =
+    e => {
+
+      if(
+        e.key === "Enter" &&
+        !e.shiftKey
+      ){
+
+        e.preventDefault();
+
+        sendComment();
+
+      }
+
+    };
+
+
+  form.append(
+    input,
+    send
+  );
+
+
+  container.append(
+    title,
+    messages,
+    form,
+    status
+  );
+
+
+  return container;
+
+}
+
+
+/* ================================================= */
+/* TERMINER TACHE */
+/* ================================================= */
 
 async function toggle(id){
 
-await updateTaskSafely(
-id,
-task=>({
-...task,
-done:!task.done
-})
-);
-
-}
-:t
-);
-
-
-await save();
+  await updateTaskSafely(
+    id,
+    task => ({
+      ...task,
+      done:!task.done
+    })
+  );
 
 }
 
@@ -1767,42 +2954,43 @@ await save();
 /* SUPPRIMER */
 /* ================================================= */
 
-
 async function del(id){
 
-await deleteTaskSafely(id);
+  if(
+    !confirm(
+      "Supprimer cette tâche ?"
+    )
+  )
+    return;
+
+
+  await deleteTaskSafely(
+    id
+  );
 
 }
 
 
 /* ================================================= */
-/* MODIFIER UNE TACHE */
+/* MODIFIER TACHE */
 /* ================================================= */
-
 
 async function editTask(
-id,
-newText,
-newPriority,
-newAssignees
+  id,
+  newText,
+  newPriority,
+  newAssignees
 ){
 
-await updateTaskSafely(
-id,
-task=>({
-...task,
-text:newText,
-priority:newPriority,
-assignee:newAssignees
-})
-);
-
-}
-:t
-);
-
-
-await save();
+  await updateTaskSafely(
+    id,
+    task => ({
+      ...task,
+      text:newText,
+      priority:newPriority,
+      assignee:newAssignees
+    })
+  );
 
 }
 
@@ -1811,856 +2999,833 @@ await save();
 /* FILTRE ETAT */
 /* ================================================= */
 
-
 function setFilter(f){
 
-filter=f;
+  filter =
+    f;
 
 
-document
-.querySelectorAll(
-".filters:not(#peopleFilters) button"
-)
-.forEach(
-b=>b.classList.remove("active")
-);
+  document
+    .querySelectorAll(
+      ".filters:not(#peopleFilters) button"
+    )
+    .forEach(
+      b =>
+        b.classList.remove(
+          "active"
+        )
+    );
 
 
-$(
-f==="done"
-?"doneFilter"
-:f
-)
-.classList.add("active");
+  const id =
+    f === "done"
+      ? "doneFilter"
+      : f;
 
 
-render();
+  $(id)
+    .classList
+    .add("active");
+
+
+  render();
 
 }
 
 
-$("all").onclick=
-()=>setFilter("all");
+$("all").onclick =
+  () => setFilter("all");
 
 
-$("todo").onclick=
-()=>setFilter("todo");
+$("todo").onclick =
+  () => setFilter("todo");
 
 
-$("doneFilter").onclick=
-()=>setFilter("done");
+$("doneFilter").onclick =
+  () => setFilter("done");
 
 
 /* ================================================= */
 /* FILTRE RESPONSABLE */
 /* ================================================= */
 
+function setPersonFilter(
+  person
+){
 
-function setPersonFilter(person){
-
-personFilter=
-person;
-
-
-document
-.querySelectorAll(
-"#peopleFilters button"
-)
-.forEach(
-b=>b.classList.remove("active")
-);
+  personFilter =
+    person;
 
 
-const buttonId=
-
-person==="all"
-?"allPeople"
-
-:person==="Jean-Luc"
-?"jeanLucFilter"
-
-:person==="Catherine"
-?"catherineFilter"
-
-:"yannisFilter";
+  document
+    .querySelectorAll(
+      "#peopleFilters button"
+    )
+    .forEach(
+      b =>
+        b.classList.remove(
+          "active"
+        )
+    );
 
 
-$(buttonId)
-.classList
-.add("active");
+  const buttonId =
+
+    person === "all"
+      ? "allPeople"
+
+    : person === "Jean-Luc"
+      ? "jeanLucFilter"
+
+    : person === "Catherine"
+      ? "catherineFilter"
+
+    : "yannisFilter";
 
 
-render();
+  $(buttonId)
+    .classList
+    .add("active");
+
+
+  render();
 
 }
 
 
-$("allPeople").onclick=
-()=>setPersonFilter("all");
+$("allPeople").onclick =
+  () => setPersonFilter("all");
 
 
-$("jeanLucFilter").onclick=
-()=>setPersonFilter("Jean-Luc");
+$("jeanLucFilter").onclick =
+  () => setPersonFilter("Jean-Luc");
 
 
-$("catherineFilter").onclick=
-()=>setPersonFilter("Catherine");
+$("catherineFilter").onclick =
+  () => setPersonFilter("Catherine");
 
 
-$("yannisFilter").onclick=
-()=>setPersonFilter("Yannis");
+$("yannisFilter").onclick =
+  () => setPersonFilter("Yannis");
 
 
 /* ================================================= */
-/* AFFICHAGE */
+/* AFFICHAGE TACHES */
 /* ================================================= */
-
 
 function render(){
 
-const box=
-$("tasks");
+  const box =
+    $("tasks");
 
 
-box.innerHTML="";
+  box.innerHTML =
+    "";
 
 
-/* FILTRAGE */
+  const shown =
 
-const shown=
+    tasks.filter(
+      task => {
 
-tasks.filter(
-t=>{
+        const matchesStatus =
 
+          filter === "all"
 
-/* ETAT */
+          ||
 
-const matchesStatus=
+          filter === "todo" &&
+          !task.done
 
-filter==="all"
+          ||
 
-||
+          filter === "done" &&
+          task.done;
 
-filter==="todo"&&!t.done
 
-||
+        const people =
 
-filter==="done"&&t.done;
+          Array.isArray(
+            task.assignee
+          )
 
+            ? task.assignee
 
-/* RESPONSABLES */
+            : task.assignee
+              ? [task.assignee]
+              : ["Yannis"];
 
-const people=
 
-Array.isArray(t.assignee)
+        const matchesPerson =
 
-?t.assignee
+          personFilter === "all"
 
-:t.assignee
-?[t.assignee]
-:["Yannis"];
+          ||
 
+          people.includes(
+            personFilter
+          );
 
-const matchesPerson=
 
-personFilter==="all"
+        return(
+          matchesStatus &&
+          matchesPerson
+        );
 
-||
+      }
+    );
 
-people.includes(
-personFilter
-);
 
+  if(!shown.length){
 
-return(
-matchesStatus&&
-matchesPerson
-);
+    box.innerHTML =
+      '<div style="padding:25px;text-align:center;color:#7b8791">Aucune tâche dans cette vue.</div>';
 
-});
+  }
 
 
-/* AUCUNE TACHE */
+  shown.forEach(
+    task => {
 
-if(!shown.length){
+      const row =
+        document.createElement(
+          "div"
+        );
 
-box.innerHTML=
 
-'<div style="padding:25px;text-align:center;color:#7b8791">Aucune tâche dans cette vue.</div>';
+      row.className =
+        "task";
 
-}
 
+      /* ================================================= */
+      /* CASE */
+      /* ================================================= */
 
-/* ================================================= */
-/* AFFICHAGE DES TACHES */
-/* ================================================= */
+      const cb =
+        document.createElement(
+          "input"
+        );
 
 
-shown.forEach(
-t=>{
+      cb.type =
+        "checkbox";
 
 
-const row=
-document.createElement("div");
+      cb.className =
+        "check";
 
 
-row.className=
-"task";
+      cb.checked =
+        !!task.done;
 
 
-/* ================================================= */
-/* CASE A COCHER */
-/* ================================================= */
+      cb.onchange =
+        () => toggle(task.id);
 
-const cb=
-document.createElement("input");
 
+      /* ================================================= */
+      /* CENTRE */
+      /* ================================================= */
 
-cb.type=
-"checkbox";
+      const mid =
+        document.createElement(
+          "div"
+        );
 
-cb.className=
-"check";
 
-cb.checked=
-t.done;
+      const title =
+        document.createElement(
+          "div"
+        );
 
-cb.onchange=
-()=>toggle(t.id);
 
+      title.className =
+        "tasktitle" +
+        (
+          task.done
+            ? " done"
+            : ""
+        );
 
-/* ================================================= */
-/* ZONE CENTRALE */
-/* ================================================= */
 
-const mid=
-document.createElement("div");
+      title.textContent =
+        task.text;
 
 
-const title=
-document.createElement("div");
+      /* ================================================= */
+      /* RESPONSABLES */
+      /* ================================================= */
 
+      const people =
 
-title.className=
-"tasktitle"+
-(t.done?" done":"");
+        Array.isArray(
+          task.assignee
+        )
 
+          ? task.assignee
 
-title.textContent=
-t.text;
+          : task.assignee
+            ? [task.assignee]
+            : ["Yannis"];
 
 
-/* ================================================= */
-/* RESPONSABLES */
-/* ================================================= */
+      const responsible =
+        document.createElement(
+          "div"
+        );
 
-const people=
 
-Array.isArray(t.assignee)
+      responsible.className =
+        "assignee-badges";
 
-?t.assignee
 
-:t.assignee
-?[t.assignee]
-:["Yannis"];
+      people.forEach(
+        person => {
 
+          const badge =
+            document.createElement(
+              "span"
+            );
 
-const responsible=
-document.createElement("div");
 
+          badge.className =
+            "assignee-badge";
 
-responsible.className=
-"assignee-badges";
 
+          if(
+            person === "Yannis"
+          ){
 
-people.forEach(
-person=>{
+            badge.classList.add(
+              "assignee-yannis"
+            );
 
+          }
 
-const badge=
-document.createElement("span");
 
+          if(
+            person === "Jean-Luc"
+          ){
 
-badge.className=
-"assignee-badge";
+            badge.classList.add(
+              "assignee-jean-luc"
+            );
 
+          }
 
-if(person==="Yannis"){
 
-badge.classList.add(
-"assignee-yannis"
-);
+          if(
+            person === "Catherine"
+          ){
 
-}
+            badge.classList.add(
+              "assignee-catherine"
+            );
 
+          }
 
-if(person==="Jean-Luc"){
 
-badge.classList.add(
-"assignee-jean-luc"
-);
+          badge.textContent =
+            person;
 
-}
 
+          responsible.append(
+            badge
+          );
 
-if(person==="Catherine"){
+        }
+      );
 
-badge.classList.add(
-"assignee-catherine"
-);
 
-}
+      /* ================================================= */
+      /* PRIORITE */
+      /* ================================================= */
 
+      const priorityBadge =
+        document.createElement(
+          "span"
+        );
 
-badge.textContent=
-person;
 
+      priorityBadge.className =
+        "badge " +
+        (
+          task.priority ||
+          "med"
+        );
 
-responsible.append(
-badge
-);
 
-});
+      priorityBadge.textContent =
 
+        task.priority === "high"
+          ? "URGENT"
 
-/* ================================================= */
-/* PRIORITE */
-/* ================================================= */
+        : task.priority === "med"
+          ? "NORMAL"
 
-const b=
-document.createElement("span");
+        : "BASSE";
 
 
-b.className=
-"badge "+t.priority;
+      const info =
+        document.createElement(
+          "div"
+        );
 
 
-b.textContent=
+      info.style.marginTop =
+        "5px";
 
-t.priority==="high"
-?"URGENT"
 
-:t.priority==="med"
-?"NORMAL"
+      info.append(
+        responsible,
+        priorityBadge
+      );
 
-:"BASSE";
 
+      /* ================================================= */
+      /* DISCUSSION */
+      /* ================================================= */
 
-/* ================================================= */
-/* INFORMATIONS */
-/* ================================================= */
+      const discussion =
+        createDiscussion(
+          task
+        );
 
-const info=
-document.createElement("div");
 
+      /* ================================================= */
+      /* ACTIONS */
+      /* ================================================= */
 
-info.style.marginTop=
-"5px";
+      const right =
+        document.createElement(
+          "div"
+        );
 
 
-info.append(
-responsible,
-b
-);
+      right.className =
+        "task-actions";
 
 
-/* ================================================= */
-/* COMMENTAIRE */
-/* ================================================= */
+      /* ================================================= */
+      /* MODIFIER */
+      /* ================================================= */
 
-const commentContainer=
-document.createElement("div");
+      const edit =
+        document.createElement(
+          "button"
+        );
 
 
-commentContainer.className=
-"task-comment";
+      edit.className =
+        "edit";
 
 
-const commentLabel=
-document.createElement("div");
+      edit.textContent =
+        "✏️";
 
 
-commentLabel.className=
-"task-comment-label";
+      edit.title =
+        "Modifier la tâche";
 
 
-commentLabel.textContent=
-"Commentaire";
+      edit.onclick =
+        () => {
 
+          const form =
+            document.createElement(
+              "div"
+            );
 
-const commentInput=
-document.createElement("textarea");
 
+          form.className =
+            "edit-form";
 
-commentInput.className=
-"task-comment-input";
 
+          const input =
+            document.createElement(
+              "input"
+            );
 
-commentInput.rows=
-1;
 
+          input.className =
+            "edit-text";
 
-commentInput.placeholder=
-"Ajouter un commentaire...";
 
+          input.value =
+            task.text;
 
-commentInput.value=
-t.comment||"";
 
+          const select =
+            document.createElement(
+              "select"
+            );
 
-const commentStatus=
-document.createElement("div");
 
+          select.className =
+            "edit-priority";
 
-commentStatus.className=
-"comment-status";
 
+          select.innerHTML = `
 
-commentInput.addEventListener(
-"input",
-()=>{
+            <option value="high">
+              Priorité haute
+            </option>
 
-updateComment(
-t.id,
-commentInput.value,
-commentInput,
-commentStatus
-);
+            <option value="med">
+              Priorité normale
+            </option>
 
-});
+            <option value="low">
+              Priorité basse
+            </option>
 
+          `;
 
-commentContainer.append(
-commentLabel,
-commentInput,
-commentStatus
-);
 
+          select.value =
+            task.priority || "med";
 
-/* ================================================= */
-/* ACTIONS */
-/* ================================================= */
 
-const right=
-document.createElement("div");
+          const editAssignees =
+            document.createElement(
+              "div"
+            );
 
 
-right.className=
-"task-actions";
+          editAssignees.className =
+            "assignees";
 
 
-/* ================================================= */
-/* MODIFIER */
-/* ================================================= */
+          const currentPeople =
 
-const edit=
-document.createElement("button");
+            Array.isArray(
+              task.assignee
+            )
 
+              ? task.assignee
 
-edit.className=
-"edit";
+              : task.assignee
+                ? [task.assignee]
+                : ["Yannis"];
 
 
-edit.textContent=
-"✏️";
+          [
+            "Yannis",
+            "Jean-Luc",
+            "Catherine"
+          ]
+          .forEach(
+            person => {
 
+              const label =
+                document.createElement(
+                  "label"
+                );
 
-edit.title=
-"Modifier la tâche";
 
+              label.className =
+                "person-checkbox " +
 
-edit.onclick=
-()=>{
+                (
+                  person === "Yannis"
+                    ? "yannis"
 
+                  : person === "Jean-Luc"
+                    ? "jean-luc"
 
-/* FORMULAIRE */
+                  : "catherine"
+                );
 
-const form=
-document.createElement("div");
 
+              const checkbox =
+                document.createElement(
+                  "input"
+                );
 
-form.className=
-"edit-form";
 
+              checkbox.type =
+                "checkbox";
 
-/* TEXTE */
 
-const input=
-document.createElement("input");
+              checkbox.value =
+                person;
 
 
-input.className=
-"edit-text";
+              checkbox.checked =
+                currentPeople.includes(
+                  person
+                );
 
 
-input.value=
-t.text;
+              const span =
+                document.createElement(
+                  "span"
+                );
 
 
-/* PRIORITE */
+              span.textContent =
+                person;
 
-const select=
-document.createElement("select");
 
+              label.append(
+                checkbox,
+                span
+              );
 
-select.className=
-"edit-priority";
 
+              editAssignees.append(
+                label
+              );
 
-select.innerHTML=`
+            }
+          );
 
-<option value="high">
-Priorité haute
-</option>
 
-<option value="med">
-Priorité normale
-</option>
+          const saveBtn =
+            document.createElement(
+              "button"
+            );
 
-<option value="low">
-Priorité basse
-</option>
 
-`;
+          saveBtn.className =
+            "save-edit";
 
 
-select.value=
-t.priority;
+          saveBtn.textContent =
+            "💾";
 
 
-/* ================================================= */
-/* RESPONSABLES EDITION */
-/* ================================================= */
+          saveBtn.title =
+            "Enregistrer";
 
-const editAssignees=
-document.createElement("div");
 
+          saveBtn.onclick =
+            async () => {
 
-editAssignees.className=
-"assignees";
+              const newText =
+                input.value.trim();
 
 
-const currentPeople=
+              if(!newText)
+                return;
 
-Array.isArray(t.assignee)
 
-?t.assignee
+              const selectedPeople =
 
-:t.assignee
-?[t.assignee]
-:["Yannis"];
+                Array.from(
+                  editAssignees
+                    .querySelectorAll(
+                      "input:checked"
+                    )
+                )
+                .map(
+                  checkbox =>
+                    checkbox.value
+                );
 
 
-[
-"Yannis",
-"Jean-Luc",
-"Catherine"
-]
-.forEach(
-person=>{
+              if(
+                !selectedPeople.length
+              ){
 
+                alert(
+                  "Merci de sélectionner au moins une personne."
+                );
 
-const label=
-document.createElement("label");
+                return;
 
+              }
 
-label.className=
-"person-checkbox "+
-(
-person==="Yannis"
-?"yannis"
 
-:person==="Jean-Luc"
-?"jean-luc"
+              await editTask(
+                task.id,
+                newText,
+                select.value,
+                selectedPeople
+              );
 
-:"catherine"
-);
+            };
 
 
-const checkbox=
-document.createElement("input");
+          const cancelBtn =
+            document.createElement(
+              "button"
+            );
 
 
-checkbox.type=
-"checkbox";
+          cancelBtn.className =
+            "cancel-edit";
 
 
-checkbox.value=
-person;
+          cancelBtn.textContent =
+            "❌";
 
 
-checkbox.checked=
-currentPeople.includes(
-person
-);
+          cancelBtn.title =
+            "Annuler";
 
 
-const span=
-document.createElement("span");
+          cancelBtn.onclick =
+            () => render();
 
 
-span.textContent=
-person;
+          form.append(
+            input,
+            select,
+            editAssignees
+          );
 
 
-label.append(
-checkbox,
-span
-);
+          mid.innerHTML =
+            "";
 
 
-editAssignees.append(
-label
-);
+          mid.append(
+            form
+          );
 
-});
 
+          right.innerHTML =
+            "";
 
-/* ================================================= */
-/* SAUVEGARDER */
-/* ================================================= */
 
-const saveBtn=
-document.createElement("button");
+          right.append(
+            saveBtn,
+            cancelBtn
+          );
 
 
-saveBtn.className=
-"save-edit";
+          input.focus();
 
+          input.select();
 
-saveBtn.textContent=
-"💾";
+        };
 
 
-saveBtn.title=
-"Enregistrer";
+      /* ================================================= */
+      /* SUPPRIMER */
+      /* ================================================= */
 
+      const deleteButton =
+        document.createElement(
+          "button"
+        );
 
-saveBtn.onclick=
-async()=>{
 
+      deleteButton.className =
+        "delete";
 
-const text=
-input.value.trim();
 
+      deleteButton.textContent =
+        "×";
 
-if(!text)
-return;
 
+      deleteButton.title =
+        "Supprimer la tâche";
 
-/* NOUVEAUX RESPONSABLES */
 
-const selectedPeople=
+      deleteButton.onclick =
+        () => del(task.id);
 
-Array.from(
-editAssignees.querySelectorAll(
-"input:checked"
-)
-).map(
-input=>input.value
-);
 
+      right.append(
+        edit,
+        deleteButton
+      );
 
-if(!selectedPeople.length){
 
-alert(
-"Merci de sélectionner au moins une personne."
-);
+      /* ================================================= */
+      /* FINAL */
+      /* ================================================= */
 
-return;
+      mid.append(
+        title,
+        info,
+        discussion
+      );
 
-}
 
+      row.append(
+        cb,
+        mid,
+        right
+      );
 
-await editTask(
-t.id,
-text,
-select.value,
-selectedPeople
-);
 
-};
+      box.append(
+        row
+      );
 
+    }
+  );
 
-/* ================================================= */
-/* ANNULER */
-/* ================================================= */
 
-const cancelBtn=
-document.createElement("button");
+  /* ================================================= */
+  /* STATISTIQUES */
+  /* ================================================= */
 
+  const total =
+    tasks.length;
 
-cancelBtn.className=
-"cancel-edit";
 
+  const done =
+    tasks.filter(
+      task =>
+        task.done
+    ).length;
 
-cancelBtn.textContent=
-"❌";
 
+  const percentage =
 
-cancelBtn.title=
-"Annuler";
+    total
 
+      ? Math.round(
+          done / total * 100
+        )
 
-cancelBtn.onclick=
-()=>render();
+      : 0;
 
 
-/* FORMULAIRE */
+  $("total").textContent =
+    total;
 
-form.append(
-input,
-select,
-editAssignees
-);
 
+  $("done").textContent =
+    done;
 
-/* REMPLACEMENT */
 
-mid.innerHTML="";
+  $("remain").textContent =
+    total - done;
 
-mid.append(
-form
-);
 
+  $("pct").textContent =
+    percentage + "%";
 
-right.innerHTML="";
 
-right.append(
-saveBtn,
-cancelBtn
-);
+  $("fill").style.width =
+    percentage + "%";
 
 
-input.focus();
+  /* ================================================= */
+  /* PRIORITES */
+  /* ================================================= */
 
-input.select();
+  const high =
 
-};
+    tasks.filter(
+      task =>
+        !task.done &&
+        task.priority === "high"
+    ).length;
 
 
-/* ================================================= */
-/* SUPPRIMER */
-/* ================================================= */
+  $("prioritySummary").innerHTML =
 
-const d=
-document.createElement("button");
+    high
 
+      ? `<strong>${high}</strong> tâche(s) urgente(s) à traiter.`
 
-d.className=
-"delete";
-
-
-d.textContent=
-"×";
-
-
-d.title=
-"Supprimer la tâche";
-
-
-d.onclick=
-()=>del(t.id);
-
-
-/* ACTIONS */
-
-right.append(
-edit,
-d
-);
-
-
-/* ================================================= */
-/* AFFICHAGE FINAL */
-/* ================================================= */
-
-mid.append(
-title,
-info,
-commentContainer
-);
-
-
-row.append(
-cb,
-mid,
-right
-);
-
-
-box.append(
-row
-);
-
-});
-
-
-/* ================================================= */
-/* STATISTIQUES */
-/* ================================================= */
-
-const total=
-tasks.length;
-
-
-const done=
-tasks.filter(
-t=>t.done
-).length;
-
-
-const p=
-
-total
-
-?Math.round(
-done/total*100
-)
-
-:0;
-
-
-$("total").textContent=
-total;
-
-
-$("done").textContent=
-done;
-
-
-$("remain").textContent=
-total-done;
-
-
-$("pct").textContent=
-p+"%";
-
-
-$("fill").style.width=
-p+"%";
-
-
-/* ================================================= */
-/* PRIORITES */
-/* ================================================= */
-
-const high=
-
-tasks.filter(
-t=>
-!t.done&&
-t.priority==="high"
-).length;
-
-
-$("prioritySummary").innerHTML=
-
-high
-
-?`<strong>${high}</strong> tâche(s) urgente(s) à traiter.`
-
-:"Aucune tâche prioritaire en attente. 👍";
+      : "Aucune tâche prioritaire en attente. 👍";
 
 }
 
@@ -2669,15 +3834,20 @@ high
 /* SERVICE WORKER */
 /* ================================================= */
 
-
 if(
-"serviceWorker"
-in navigator
+  "serviceWorker" in navigator
 ){
 
-navigator.serviceWorker.register(
-"sw.js"
-);
+  navigator.serviceWorker.register(
+    "sw.js"
+  )
+  .catch(
+    error =>
+      console.error(
+        "Erreur Service Worker :",
+        error
+      )
+  );
 
 }
 
