@@ -257,11 +257,16 @@ button:disabled{
   gap:6px;
   flex-wrap:wrap;
   align-items:center;
-}
-
 .person-checkbox{
   position:relative;
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 9px;
+  border-radius:10px;
+  border:2px solid transparent;
+  transition:.15s;
 }
 
 .person-checkbox input{
@@ -272,32 +277,33 @@ button:disabled{
 
 .person-checkbox span{
   display:inline-block;
-  padding:9px 12px;
-  border-radius:9px;
   font-size:13px;
   font-weight:700;
-  border:2px solid transparent;
-  transition:.15s;
 }
 
-.person-checkbox.yannis span{
+.person-checkbox.yannis{
   background:#dcecff;
   color:#1764a0;
 }
 
-.person-checkbox.jean-luc span{
+.person-checkbox.jean-luc{
   background:#f9dddd;
   color:#a83232;
 }
 
-.person-checkbox.catherine span{
+.person-checkbox.catherine{
   background:#fff1b8;
   color:#8a6a00;
 }
 
-.person-checkbox input:checked + span{
+.person-checkbox:has(input:checked){
   border-color:currentColor;
   box-shadow:0 0 0 2px #ffffff inset;
+  transform:translateY(-1px);
+}
+
+.person-checkbox:hover{
+  transform:translateY(-1px);
 }
 
 /* ================================================= */
