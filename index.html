@@ -1464,6 +1464,23 @@ const COUPE_MACHINES = {
   "SMRE375":["Marlon","Baptiste","Nicolas"]
 };
 
+const PVC_POLES = {
+  "STW":["Irène","Betty","Jessica","Hélène"],
+  "KST":["Séverine","Mélanie.K"],
+  "LOS":["Bérénice","Mélanie.R","Jessica"]
+};
+
+const PVC_POLE_BY_PERSON = {
+  "Irène":"STW",
+  "Betty":"STW",
+  "Jessica":"STW",
+  "Hélène":"STW",
+  "Séverine":"KST",
+  "Mélanie.K":"KST",
+  "Bérénice":"LOS",
+  "Mélanie.R":"LOS"
+};
+
 const MACHINES_BY_PERSON = {
   "Loïc":["M1","PAC2000"],
   "Nicolas":["M1","PAC2000","SMRE375"],
@@ -1476,6 +1493,7 @@ const MACHINES_BY_PERSON = {
 };
 
 let selectedPole = null;
+let selectedPvcPole = null;
 
 /* ================================================= */
 /* VARIABLES */
@@ -1798,6 +1816,7 @@ function showUserChooser(){
   tasks=[]; notes=[]; selectedUser=null; selectedPole=null;
   sessionStorage.removeItem("workboardUser");
   sessionStorage.removeItem("workboardPole");
+  sessionStorage.removeItem("workboardPvcPole");
   $("login").style.display="none";
   $("app").style.display="none";
   $("pinModal").style.display="none";
@@ -1808,13 +1827,52 @@ function showUserChooser(){
 
 function showOperatorChooser(pole){
   selectedPole=pole;
+  selectedPvcPole=null;
   sessionStorage.setItem("workboardPole",pole);
+  sessionStorage.removeItem("workboardPvcPole");
   $("poleChooser").style.display="none";
   $("operatorChooser").style.display="block";
   $("operatorPoleTitle").textContent=`Pôle ${pole}`;
   const grid=$("operatorChoiceGrid");
   grid.innerHTML="";
+
+  if(pole === "PVC"){
+    (Object.keys(PVC_POLES)).forEach(pvcPole=>{
+      const button=document.createElement("button");
+      button.className="user-choice operator";
+      const avatar=document.createElement("span");
+      avatar.className="operator-initials";
+      avatar.textContent=pvcPole;
+      const label=document.createElement("span");
+      label.textContent=pvcPole;
+      button.append(avatar,label);
+      button.onclick=()=>showPvcOperatorChooser(pvcPole);
+      grid.append(button);
+    });
+    return;
+  }
+
   (OPERATOR_POLES[pole] || []).forEach(name=>{
+    const button=document.createElement("button");
+    button.className="user-choice operator";
+    const avatar=document.createElement("span");
+    avatar.className="operator-initials";
+    avatar.textContent=getPersonInitials(name);
+    const label=document.createElement("span");
+    label.textContent=name;
+    button.append(avatar,label);
+    button.onclick=()=>openPinModal(name);
+    grid.append(button);
+  });
+}
+
+function showPvcOperatorChooser(pvcPole){
+  selectedPvcPole=pvcPole;
+  sessionStorage.setItem("workboardPvcPole",pvcPole);
+  $("operatorPoleTitle").textContent=`PVC - ${pvcPole}`;
+  const grid=$("operatorChoiceGrid");
+  grid.innerHTML="";
+  (PVC_POLES[pvcPole] || []).forEach(name=>{
     const button=document.createElement("button");
     button.className="user-choice operator";
     const avatar=document.createElement("span");
@@ -1840,13 +1898,15 @@ function showApplication(){
 }
 
 function getMachinesForSelectedUser(){
-  if(selectedPole !== "Coupe") return [];
-  return MACHINES_BY_PERSON[selectedUser] || [];
+  if(selectedPole === "Coupe") return MACHINES_BY_PERSON[selectedUser] || [];
+  if(selectedPole === "PVC") return selectedPvcPole ? [selectedPvcPole] : [];
+  return [];
 }
 
 function getPeopleForMachine(machine){
-  if(selectedPole !== "Coupe") return OPERATOR_POLES[selectedPole] || [];
-  return COUPE_MACHINES[machine] || [];
+  if(selectedPole === "Coupe") return COUPE_MACHINES[machine] || [];
+  if(selectedPole === "PVC") return PVC_POLES[machine] || [];
+  return [];
 }
 
 function populateOperatorMachineAndAssignees(){
@@ -1856,6 +1916,22 @@ function populateOperatorMachineAndAssignees(){
   const box = $("assignees");
 
   if(!field || !select || !box) return;
+
+  if(selectedPole === "PVC"){
+
+    field.style.display = "flex";
+    $("machineField").querySelector(".machine-label").textContent = "Secteur";
+    select.innerHTML = "";
+    (getMachinesForSelectedUser()).forEach(sector=>{
+      const option=document.createElement("option");
+      option.value=sector;
+      option.textContent=sector;
+      select.append(option);
+    });
+    renderMachineAssignees(select.value);
+    select.onchange = () => renderMachineAssignees(select.value);
+    return;
+  }
 
   if(selectedPole !== "Coupe"){
 
@@ -1884,6 +1960,7 @@ function populateOperatorMachineAndAssignees(){
   }
 
   field.style.display = "flex";
+  $("machineField").querySelector(".machine-label").textContent = "Machine";
   const machines = getMachinesForSelectedUser();
   select.innerHTML = "";
 
@@ -1936,8 +2013,23 @@ function renderMachineAssignees(machine, checkedPeople=[]){
 function populateOperatorFilters(){
   const box=$("peopleFilters"); if(!box) return;
   box.innerHTML="";
-  const all=document.createElement("button"); all.id="allPeople"; all.className="active"; all.textContent="Tous"; all.onclick=()=>setPersonFilter("all"); box.append(all);
-  (OPERATOR_POLES[selectedPole] || []).forEach(person=>{ const b=document.createElement("button"); b.textContent=person; b.onclick=()=>setPersonFilter(person); box.append(b); });
+  const all=document.createElement("button");
+  all.id="allPeople";
+  all.className="active";
+  all.textContent="Tous";
+  all.onclick=()=>setPersonFilter("all");
+  box.append(all);
+
+  const people = selectedPole === "PVC"
+    ? (PVC_POLES[selectedPvcPole] || [])
+    : (OPERATOR_POLES[selectedPole] || []);
+
+  people.forEach(person=>{
+    const b=document.createElement("button");
+    b.textContent=person;
+    b.onclick=()=>setPersonFilter(person);
+    box.append(b);
+  });
 }
 
 /* ================================================= */
@@ -2035,6 +2127,7 @@ onAuthStateChanged(auth,user => {
     notes=[];
     selectedUser=null;
     selectedPole=null;
+    selectedPvcPole=null;
     sessionStorage.removeItem("workboardUser");
     sessionStorage.removeItem("workboardPole");
     $("login").style.display = "block";
@@ -2048,7 +2141,20 @@ onAuthStateChanged(auth,user => {
 /* BOUTONS UTILISATEURS */
 /* ================================================= */
 document.querySelectorAll("[data-pole]").forEach(button=>{ button.onclick=()=>showOperatorChooser(button.dataset.pole); });
-$("backToPoles").onclick=()=>{ selectedPole=null; $("poleChooser").style.display="block"; $("operatorChooser").style.display="none"; };
+$("backToPoles").onclick=()=>{
+  if(selectedPole === "PVC" && selectedPvcPole){
+    selectedPvcPole=null;
+    sessionStorage.removeItem("workboardPvcPole");
+    showOperatorChooser("PVC");
+    return;
+  }
+  selectedPole=null;
+  selectedPvcPole=null;
+  sessionStorage.removeItem("workboardPole");
+  sessionStorage.removeItem("workboardPvcPole");
+  $("poleChooser").style.display="block";
+  $("operatorChooser").style.display="none";
+};
 $("pinSubmit").onclick=validatePin;
 $("pinCancel").onclick=closePinModal;
 $("pinInput").addEventListener("input",()=>{ $("pinInput").value=$("pinInput").value.replace(/\D/g,"").slice(0,4); });
@@ -2563,11 +2669,11 @@ $("add").onclick =
 
     let machine = null;
 
-    if(selectedPole === "Coupe"){
+    if(selectedPole === "Coupe" || selectedPole === "PVC"){
       machine = $("machineSelect").value;
 
       if(!machine){
-        alert("Merci de sélectionner une machine.");
+        alert(selectedPole === "PVC" ? "Merci de sélectionner un secteur." : "Merci de sélectionner une machine.");
         return;
       }
     }
@@ -2600,7 +2706,7 @@ $("add").onclick =
 
       input.value = "";
 
-      if(selectedPole === "Coupe")
+      if(selectedPole === "Coupe" || selectedPole === "PVC")
         renderMachineAssignees($("machineSelect").value);
 
     }
@@ -3867,7 +3973,7 @@ function render(){
       if(task.machine){
         const machineBadge=document.createElement("span");
         machineBadge.className="machine-badge";
-        machineBadge.textContent="Machine : " + task.machine;
+        machineBadge.textContent=(selectedPole === "PVC" ? "Secteur : " : "Machine : ") + task.machine;
         responsible.append(machineBadge);
       }
 
@@ -3993,7 +4099,7 @@ function render(){
 
           let editPeople = [];
 
-          if(selectedPole === "Coupe"){
+          if(selectedPole === "Coupe" || selectedPole === "PVC"){
 
             const machines = getMachinesForSelectedUser();
             machines.forEach(machine => {
@@ -4010,12 +4116,12 @@ function render(){
             editMachine.value=taskMachine;
             editPeople=getPeopleForMachine(taskMachine)
               .filter(person => person !== selectedUser);
+            if(selectedPole === "PVC") editMachine.title="Secteur PVC";
 
           }
           else{
             editMachine.style.display="none";
-            editPeople=(OPERATOR_POLES[selectedPole] || [])
-              .filter(person => person !== selectedUser);
+            editPeople=[];
           }
 
           const editAssignees =
@@ -4036,9 +4142,9 @@ function render(){
           function renderEditAssignees(){
             editAssignees.innerHTML="";
 
-            const people = selectedPole === "Coupe"
+            const people = (selectedPole === "Coupe" || selectedPole === "PVC")
               ? getPeopleForMachine(editMachine.value).filter(person => person !== selectedUser)
-              : (OPERATOR_POLES[selectedPole] || []).filter(person => person !== selectedUser);
+              : [];
 
             people.forEach(person => {
               const label=document.createElement("label");
@@ -4115,12 +4221,12 @@ function render(){
               }
 
               const newMachine =
-                selectedPole === "Coupe"
+                (selectedPole === "Coupe" || selectedPole === "PVC")
                   ? editMachine.value
                   : null;
 
-              if(selectedPole === "Coupe" && !newMachine){
-                alert("Merci de sélectionner une machine.");
+              if((selectedPole === "Coupe" || selectedPole === "PVC") && !newMachine){
+                alert(selectedPole === "PVC" ? "Merci de sélectionner un secteur." : "Merci de sélectionner une machine.");
                 return;
               }
 
