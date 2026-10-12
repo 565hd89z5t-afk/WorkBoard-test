@@ -1801,6 +1801,110 @@ function populateOperatorFilters(){
 }
 
 /* ================================================= */
+/* CONNEXION FIREBASE */
+/* ================================================= */
+
+function friendlyAuthError(error){
+  const code = error?.code || "";
+  const messages = {
+    "auth/invalid-email":"Adresse e-mail invalide.",
+    "auth/invalid-credential":"Adresse e-mail ou mot de passe incorrect.",
+    "auth/user-not-found":"Aucun compte ne correspond à cette adresse e-mail.",
+    "auth/wrong-password":"Mot de passe incorrect.",
+    "auth/email-already-in-use":"Cette adresse e-mail possède déjà un compte.",
+    "auth/weak-password":"Le mot de passe doit contenir au moins 6 caractères.",
+    "auth/network-request-failed":"Problème de connexion à Internet.",
+    "auth/too-many-requests":"Trop de tentatives. Réessaie dans quelques instants."
+  };
+  return messages[code] || "Impossible de se connecter pour le moment.";
+}
+
+$("signin").onclick = async () => {
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  const msg = $("loginMsg");
+
+  msg.style.display = "none";
+  msg.textContent = "";
+
+  if(!email || !password){
+    msg.textContent = "Entre ton adresse e-mail et ton mot de passe.";
+    msg.style.display = "block";
+    return;
+  }
+
+  const button = $("signin");
+  button.disabled = true;
+  button.textContent = "Connexion...";
+
+  try{
+    await signInWithEmailAndPassword(auth,email,password);
+  }catch(error){
+    console.error("WorkBoard opérateurs - connexion :",error);
+    msg.textContent = friendlyAuthError(error);
+    msg.style.display = "block";
+  }finally{
+    button.disabled = false;
+    button.textContent = "Se connecter";
+  }
+};
+
+$("signup").onclick = async () => {
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  const msg = $("loginMsg");
+
+  msg.style.display = "none";
+  msg.textContent = "";
+
+  if(!email || !password){
+    msg.textContent = "Entre une adresse e-mail et un mot de passe pour créer le compte.";
+    msg.style.display = "block";
+    return;
+  }
+
+  const button = $("signup");
+  button.disabled = true;
+  button.textContent = "Création...";
+
+  try{
+    await createUserWithEmailAndPassword(auth,email,password);
+  }catch(error){
+    console.error("WorkBoard opérateurs - création compte :",error);
+    msg.textContent = friendlyAuthError(error);
+    msg.style.display = "block";
+  }finally{
+    button.disabled = false;
+    button.textContent = "Créer mon compte";
+  }
+};
+
+onAuthStateChanged(auth,user => {
+  currentUser = user;
+
+  if(user){
+    $("login").style.display = "none";
+    $("userChooser").style.display = "block";
+    $("poleChooser").style.display = "block";
+    $("operatorChooser").style.display = "none";
+    $("app").style.display = "none";
+    $("pinModal").style.display = "none";
+  }else{
+    if(unsub){ unsub(); unsub=null; }
+    tasks=[];
+    notes=[];
+    selectedUser=null;
+    selectedPole=null;
+    sessionStorage.removeItem("workboardUser");
+    sessionStorage.removeItem("workboardPole");
+    $("login").style.display = "block";
+    $("userChooser").style.display = "none";
+    $("app").style.display = "none";
+    $("pinModal").style.display = "none";
+  }
+});
+
+/* ================================================= */
 /* BOUTONS UTILISATEURS */
 /* ================================================= */
 document.querySelectorAll("[data-pole]").forEach(button=>{ button.onclick=()=>showOperatorChooser(button.dataset.pole); });
