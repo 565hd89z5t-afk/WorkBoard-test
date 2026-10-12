@@ -752,60 +752,71 @@ button:disabled{
   line-height:1.4;
 }
 
-
 /* ================================================= */
-/* PHOTOS AJOUTEES DANS WORKBOARD */
+/* CODE PIN PROFIL */
 /* ================================================= */
 
-.photo-picker{
-  display:flex;
+#pinModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#17324d99;
+  z-index:9999;
   align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:9px;
+  justify-content:center;
+  padding:18px;
 }
 
-.photo-picker input[type="file"]{
-  padding:9px;
-  background:#f7f9fb;
+.pin-card{
+  width:100%;
+  max-width:420px;
+  background:#fff;
+  border-radius:20px;
+  padding:24px;
+  box-shadow:0 12px 40px #17324d40;
+  text-align:center;
+}
+
+.pin-card h2{
+  margin:0 0 8px;
+}
+
+.pin-subtitle{
+  color:#71808c;
+  font-size:14px;
+  margin-bottom:18px;
+}
+
+.pin-avatar{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  object-fit:cover;
+  margin-bottom:10px;
+}
+
+.pin-input{
+  text-align:center;
+  font-size:28px;
+  letter-spacing:10px;
+  font-weight:700;
+}
+
+.pin-msg{
+  min-height:20px;
+  margin-top:9px;
+  color:#a33b31;
   font-size:13px;
 }
 
-.photo-preview{
+.pin-actions{
   display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:8px;
+  gap:8px;
+  margin-top:10px;
 }
 
-.photo-thumb{
-  width:78px;
-  height:78px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid #d7dfe6;
-  cursor:pointer;
-}
-
-.attached-photos{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:8px;
-}
-
-.attached-photo{
-  width:82px;
-  height:82px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid #d7dfe6;
-  cursor:pointer;
-}
-
-.photo-help{
-  font-size:11px;
-  color:#7b8791;
+.pin-actions button{
+  flex:1;
 }
 
 /* ================================================= */
@@ -956,6 +967,52 @@ button:disabled{
       >
       <span>Catherine</span>
     </button>
+
+  </div>
+
+</div>
+
+<!-- ================================================= -->
+<!-- CODE PIN -->
+<!-- ================================================= -->
+
+<div id="pinModal">
+
+  <div class="pin-card">
+
+    <img id="pinAvatar" class="pin-avatar" src="Yannis.png" alt="">
+
+    <h2 id="pinTitle">Code personnel</h2>
+
+    <div id="pinSubtitle" class="pin-subtitle"></div>
+
+    <input
+      id="pinInput"
+      class="pin-input"
+      type="password"
+      inputmode="numeric"
+      autocomplete="off"
+      maxlength="4"
+      placeholder="••••"
+    >
+
+    <input
+      id="pinConfirm"
+      class="pin-input"
+      type="password"
+      inputmode="numeric"
+      autocomplete="off"
+      maxlength="4"
+      placeholder="••••"
+      style="display:none;margin-top:10px"
+    >
+
+    <div id="pinMsg" class="pin-msg"></div>
+
+    <div class="pin-actions">
+      <button id="pinCancel" class="secondary">Annuler</button>
+      <button id="pinSubmit" class="primary">Valider</button>
+    </div>
 
   </div>
 
@@ -1168,18 +1225,6 @@ button:disabled{
 
   </div>
 
-  <div class="photo-picker">
-    <input
-      id="notePhotos"
-      type="file"
-      accept="image/*"
-      multiple
-    >
-    <span class="photo-help">Ajouter des photos depuis la galerie (max. 3)</span>
-  </div>
-
-  <div id="notePhotoPreview" class="photo-preview"></div>
-
 </div>
 
 <button
@@ -1295,18 +1340,6 @@ button:disabled{
     </div>
 
   </div>
-
-  <div class="photo-picker">
-    <input
-      id="taskPhotos"
-      type="file"
-      accept="image/*"
-      multiple
-    >
-    <span class="photo-help">Photos depuis la galerie (max. 3)</span>
-  </div>
-
-  <div id="taskPhotoPreview" class="photo-preview"></div>
 
   <button
     class="primary"
@@ -1426,10 +1459,8 @@ from
 import {
   getFirestore,
   doc,
-  collection,
-  getDocs,
+  getDoc,
   onSnapshot,
-  setDoc,
   runTransaction
 }
 from
@@ -1455,15 +1486,19 @@ const db =
 /* ================================================= */
 
 const day =
-  new Date()
-    .toISOString()
-    .slice(0,10);
+  new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone:"Europe/Paris",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit"
+    }
+  ).format(new Date());
 
 let tasks = [];
 
 let notes = [];
-
-let photosById = {};
 
 let filter = "all";
 
@@ -1471,10 +1506,14 @@ let personFilter = "all";
 
 let unsub = null;
 
+/* Autorise temporairement tasks:[] uniquement après une suppression locale de la dernière tâche. */
+let allowEmptyTaskSync = false;
+
 let currentUser = null;
 
-let selectedUser =
-  sessionStorage.getItem("workboardUser") || null;
+let selectedUser = null;
+
+let pinBusy = false;
 
 /* ================================================= */
 /* UTILITAIRE */
@@ -1498,112 +1537,6 @@ function getPersonPhoto(name){
   return personPhotos[name]
     || "Yannis.png";
 
-}
-
-/* ================================================= */
-/* PHOTOS */
-/* ================================================= */
-
-async function compressPhoto(file){
-
-  if(!file || !file.type.startsWith("image/"))
-    throw new Error("Fichier image invalide.");
-
-  const url = URL.createObjectURL(file);
-
-  try{
-    const img = new Image();
-    await new Promise((resolve,reject)=>{
-      img.onload=resolve;
-      img.onerror=reject;
-      img.src=url;
-    });
-
-    const maxSide = 900;
-    const scale = Math.min(1, maxSide / Math.max(img.width,img.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(img.width*scale));
-    canvas.height = Math.max(1, Math.round(img.height*scale));
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-
-    let quality = 0.62;
-    let data = canvas.toDataURL("image/jpeg",quality);
-
-    while(data.length > 135000 && quality > 0.35){
-      quality -= 0.07;
-      data = canvas.toDataURL("image/jpeg",quality);
-    }
-
-    return data;
-  }finally{
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function compressSelectedPhotos(input){
-  const files = Array.from(input.files || []).slice(0,3);
-  const photos=[];
-  for(const file of files){
-    photos.push(await compressPhoto(file));
-  }
-  return photos;
-}
-
-function showPhotoPreview(input, boxId){
-  const box=$(boxId);
-  box.innerHTML="";
-  Array.from(input.files || []).slice(0,3).forEach(file=>{
-    const url=URL.createObjectURL(file);
-    const img=document.createElement("img");
-    img.className="photo-thumb";
-    img.src=url;
-    img.onload=()=>URL.revokeObjectURL(url);
-    box.append(img);
-  });
-}
-
-function renderPhotos(ids, className="attached-photo"){
-  const box=document.createElement("div");
-  box.className="attached-photos";
-  (Array.isArray(ids)?ids:[]).forEach(id=>{
-    const data=photosById[id];
-    if(!data) return;
-    const img=document.createElement("img");
-    img.className=className;
-    img.src=data.data;
-    img.alt="Photo";
-    img.title="Cliquer pour agrandir";
-    img.onclick=()=>window.open(data.data,"_blank");
-    box.append(img);
-  });
-  return box;
-}
-
-async function savePhotos(photoData, parentType, parentId){
-  if(!currentUser || !photoData.length) return [];
-  const ids=[];
-  for(const data of photoData){
-    const id=crypto.randomUUID();
-    ids.push(id);
-    await setDoc(
-      doc(db,"users",currentUser.uid,"days",day,"photos",id),
-      {id,data,parentType,parentId,author:selectedUser,createdAt:Date.now()}
-    );
-  }
-  return ids;
-}
-
-async function loadPhotos(uid){
-  try{
-    const snap=await getDocs(collection(db,"users",uid,"days",day,"photos"));
-    photosById={};
-    snap.forEach(d=>{ photosById[d.id]=d.data(); });
-    render();
-    renderNotes();
-  }catch(e){
-    console.error("Erreur chargement photos :",e);
-  }
 }
 
 function updateCurrentUserAvatar(){
@@ -1646,52 +1579,248 @@ new Intl.DateTimeFormat(
 
 function setCurrentUser(name){
 
-  selectedUser =
-    name;
+  selectedUser = name;
 
   sessionStorage.setItem(
     "workboardUser",
     name
   );
 
-  $("currentUserName").textContent =
-    name;
+  $("currentUserName").textContent = name;
 
   updateCurrentUserAvatar();
 
 }
 
 /* ================================================= */
-/* CHOIX UTILISATEUR */
+/* CODE PIN PROFIL */
 /* ================================================= */
+
+async function hashPin(pin){
+
+  try{
+    if(!window.crypto || !window.crypto.subtle){
+      throw new Error("CRYPTO_UNAVAILABLE");
+    }
+
+    const data = new TextEncoder().encode(pin);
+    const hash = await window.crypto.subtle.digest("SHA-256", data);
+
+    return Array.from(new Uint8Array(hash))
+      .map(b => b.toString(16).padStart(2,"0"))
+      .join("");
+
+  }catch(error){
+    console.error("WorkBoard PIN - erreur de hachage :", error);
+    throw error;
+  }
+
+}
+
+function profileRef(uid){
+
+  return doc(db,"users",uid,"days","profile");
+
+}
+
+function openPinModal(name){
+
+  selectedUser = name;
+
+  $("pinAvatar").src = getPersonPhoto(name);
+  $("pinAvatar").alt = name;
+  $("pinInput").value = "";
+  $("pinConfirm").value = "";
+  $("pinMsg").textContent = "";
+  $("pinModal").style.display = "flex";
+
+  checkPinStatus(name);
+
+}
+
+async function checkPinStatus(name){
+
+  if(!currentUser){
+    closePinModal();
+    return;
+  }
+
+  try{
+
+    const snap = await getDoc(profileRef(currentUser.uid));
+    const data = snap.exists() ? snap.data() : {};
+    const pinHashes = data.pinHashes || {};
+    const hasPin = typeof pinHashes[name] === "string" && pinHashes[name].length > 0;
+
+    $("pinTitle").textContent = hasPin
+      ? "Entre ton code"
+      : "Crée ton code personnel";
+
+    $("pinSubtitle").textContent = hasPin
+      ? `Code à 4 chiffres pour ${name}`
+      : `Choisis un code à 4 chiffres pour ${name}`;
+
+    $("pinConfirm").style.display = hasPin ? "none" : "block";
+    $("pinConfirm").placeholder = hasPin ? "" : "Confirme le code";
+    $("pinSubmit").textContent = hasPin ? "Déverrouiller" : "Créer le code";
+
+    $("pinInput").focus();
+
+  }catch(error){
+
+    console.error(error);
+    $("pinMsg").textContent = "Impossible de vérifier le code pour le moment.";
+
+  }
+
+}
+
+function closePinModal(){
+
+  $("pinModal").style.display = "none";
+  $("pinInput").value = "";
+  $("pinConfirm").value = "";
+  $("pinMsg").textContent = "";
+  selectedUser = null;
+
+}
+
+async function validatePin(){
+
+  if(pinBusy || !currentUser || !selectedUser) return;
+
+  const pin = $("pinInput").value.trim();
+  const confirmation = $("pinConfirm").value.trim();
+
+  if(!/^\d{4}$/.test(pin)){
+    $("pinMsg").textContent = "Le code doit contenir exactement 4 chiffres.";
+    return;
+  }
+
+  pinBusy = true;
+  $("pinSubmit").disabled = true;
+
+  try{
+
+    const profile = profileRef(currentUser.uid);
+    const snap = await getDoc(profile);
+    const data = snap.exists() ? snap.data() : {};
+    const pinHashes = data.pinHashes || {};
+    const existingHash = pinHashes[selectedUser];
+    const newHash = await hashPin(pin);
+
+    if(typeof existingHash !== "string" || !existingHash){
+
+      if(!/^\d{4}$/.test(confirmation)){
+        $("pinMsg").textContent = "Confirme le code avec 4 chiffres.";
+        return;
+      }
+
+      if(pin !== confirmation){
+        $("pinMsg").textContent = "Les deux codes ne correspondent pas.";
+        return;
+      }
+
+      await runTransaction(db, async transaction => {
+        const fresh = await transaction.get(profile);
+        const freshData = fresh.exists() ? fresh.data() : {};
+        const freshHashes = freshData.pinHashes || {};
+
+        if(typeof freshHashes[selectedUser] === "string" && freshHashes[selectedUser]){
+          throw new Error("PIN_ALREADY_EXISTS");
+        }
+
+        transaction.set(profile,{
+          pinHashes:{...freshHashes,[selectedUser]:newHash},
+          updatedAt:Date.now()
+        },{merge:true});
+      });
+
+      finishPinLogin();
+      return;
+
+    }
+
+    if(newHash !== existingHash){
+      $("pinMsg").textContent = "Code incorrect.";
+      $("pinInput").value = "";
+      $("pinInput").focus();
+      return;
+    }
+
+    finishPinLogin();
+
+  }catch(error){
+
+    if(error.message === "PIN_ALREADY_EXISTS"){
+      $("pinMsg").textContent = "Ce profil vient d'être configuré. Réessaie avec son code.";
+      return;
+    }
+
+    console.error("WorkBoard PIN - validation :", error);
+
+    if(error && error.code === "permission-denied"){
+      $("pinMsg").textContent = "Firebase refuse l'accès au profil PIN. Vérifie les règles Firestore.";
+    }
+    else if(error && error.code === "unavailable"){
+      $("pinMsg").textContent = "Firebase est momentanément indisponible. Réessaie.";
+    }
+    else if(error && error.message === "CRYPTO_UNAVAILABLE"){
+      $("pinMsg").textContent = "Le navigateur ne permet pas de sécuriser le code.";
+    }
+    else{
+      $("pinMsg").textContent = "Erreur lors de la validation du code. Consulte la console (F12) pour le détail.";
+    }
+
+  }finally{
+
+    pinBusy = false;
+    $("pinSubmit").disabled = false;
+
+  }
+
+}
+
+function finishPinLogin(){
+
+  setCurrentUser(selectedUser);
+  closePinModal();
+  selectedUser = sessionStorage.getItem("workboardUser");
+  showApplication();
+
+  if(currentUser){
+    listen(currentUser.uid);
+  }
+
+}
 
 function showUserChooser(){
 
-  $("login").style.display =
-    "none";
+  if(unsub){
+    unsub();
+    unsub = null;
+  }
 
-  $("app").style.display =
-    "none";
+  tasks = [];
+  notes = [];
+  selectedUser = null;
+  sessionStorage.removeItem("workboardUser");
 
-  $("userChooser").style.display =
-    "block";
+  $("login").style.display = "none";
+  $("app").style.display = "none";
+  $("pinModal").style.display = "none";
+  $("userChooser").style.display = "block";
 
 }
 
 function showApplication(){
 
-  $("login").style.display =
-    "none";
+  $("login").style.display = "none";
+  $("userChooser").style.display = "none";
+  $("pinModal").style.display = "none";
+  $("app").style.display = "block";
 
-  $("userChooser").style.display =
-    "none";
-
-  $("app").style.display =
-    "block";
-
-  $("currentUserName").textContent =
-    selectedUser;
-
+  $("currentUserName").textContent = selectedUser;
   updateCurrentUserAvatar();
 
 }
@@ -1707,26 +1836,31 @@ document
     button.addEventListener(
       "click",
       () => {
-
-        const name =
-          button.dataset.user;
-
-        setCurrentUser(name);
-
-        showApplication();
-
-        if(currentUser){
-
-          listen(
-            currentUser.uid
-          );
-
-        }
-
+        openPinModal(button.dataset.user);
       }
     );
 
   });
+
+$("pinSubmit").onclick = validatePin;
+
+$("pinCancel").onclick = closePinModal;
+
+$("pinInput").addEventListener("input", () => {
+  $("pinInput").value = $("pinInput").value.replace(/\D/g,"").slice(0,4);
+});
+
+$("pinConfirm").addEventListener("input", () => {
+  $("pinConfirm").value = $("pinConfirm").value.replace(/\D/g,"").slice(0,4);
+});
+
+$("pinInput").addEventListener("keydown", e => {
+  if(e.key === "Enter") validatePin();
+});
+
+$("pinConfirm").addEventListener("keydown", e => {
+  if(e.key === "Enter") validatePin();
+});
 
 /* ================================================= */
 /* CHANGER D'UTILISATEUR */
@@ -1964,20 +2098,7 @@ onAuthStateChanged(
     $("status").className =
       "online";
 
-    if(selectedUser){
-
-      showApplication();
-
-      listen(
-        user.uid
-      );
-
-    }
-    else{
-
-      showUserChooser();
-
-    }
+    showUserChooser();
 
   }
 );
@@ -2054,10 +2175,57 @@ function listen(uid){
             ? snapshot.data()
             : {};
 
-        tasks =
-          Array.isArray(data.tasks)
-            ? data.tasks
-            : [];
+        /*
+         * SECURITE : ne jamais remplacer les tâches affichées par []
+         * si le champ tasks est absent ou invalide. Une ancienne version
+         * de WorkBoard ou une écriture incomplète ne doit pas vider l'écran.
+         */
+        if(Object.prototype.hasOwnProperty.call(data,"tasks")){
+
+          if(Array.isArray(data.tasks)){
+
+            /*
+             * SECURITE RENFORCEE : une version ancienne de WorkBoard ne doit
+             * pas pouvoir vider l'affichage d'une version récente simplement
+             * en envoyant tasks:[] sur un document déjà rempli.
+             * Une liste vide n'est acceptée que si l'application vient
+             * elle-même de supprimer la dernière tâche.
+             */
+            if(data.tasks.length === 0 && tasks.length > 0 && !allowEmptyTaskSync){
+
+              console.warn(
+                "WorkBoard : réception d'un tasks:[] suspect, tâches locales conservées."
+              );
+
+            }
+            else{
+
+              tasks = data.tasks;
+
+              if(data.tasks.length === 0){
+                allowEmptyTaskSync = false;
+              }
+
+            }
+
+          }
+          else{
+
+            console.warn(
+              "WorkBoard : champ tasks invalide, conservation des tâches locales.",
+              data.tasks
+            );
+
+          }
+
+        }
+        else if(snapshot.exists()){
+
+          console.warn(
+            "WorkBoard : champ tasks absent, conservation des tâches locales."
+          );
+
+        }
 
         if(
           Array.isArray(data.notes)
@@ -2097,24 +2265,13 @@ function listen(uid){
         render();
 
         renderNotes();
-        loadPhotos(uid);
 
-        if(!snapshot.exists()){
-
-          setDoc(
-            ref(uid),
-            {
-              tasks:[],
-              notes:[],
-              date:day,
-              updatedAt:Date.now()
-            },
-            {
-              merge:true
-            }
-          );
-
-        }
+        /*
+         * Ne jamais créer automatiquement un document vide au chargement.
+         * Le document sera créé par une vraie action de l'utilisateur
+         * (ajout d'une tâche ou d'une note). Cela évite qu'une ouverture
+         * de WorkBoard puisse écraser ou réinitialiser la journée.
+         */
 
       },
 
@@ -2134,6 +2291,53 @@ function listen(uid){
       }
 
     );
+
+}
+
+/* ================================================= */
+/* PROTECTION CONTRE UN VIDAGE ACCIDENTEL */
+/* ================================================= */
+
+function safeTasksFromData(data){
+
+  if(!Object.prototype.hasOwnProperty.call(data,"tasks")){
+
+    return null;
+
+  }
+
+  if(!Array.isArray(data.tasks)){
+
+    return null;
+
+  }
+
+  return data.tasks;
+
+}
+
+function blockAccidentalTaskWipe(currentTasks,newTasks,action){
+
+  /*
+   * Une action normale de WorkBoard ne peut pas faire passer
+   * plusieurs tâches directement à zéro. On bloque ce cas.
+   * La suppression de la dernière tâche reste autorisée (1 -> 0).
+   */
+  if(
+    currentTasks.length > 1 &&
+    newTasks.length === 0
+  ){
+
+    console.error(
+      "WorkBoard : écriture bloquée pour éviter un vidage accidentel des tâches.",
+      {action,currentCount:currentTasks.length}
+    );
+
+    throw new Error(
+      "Écriture bloquée : tentative de vider toutes les tâches."
+    );
+
+  }
 
 }
 
@@ -2166,9 +2370,17 @@ async function addTaskSafely(task){
           : {};
 
       const currentTasks =
-        Array.isArray(data.tasks)
-          ? data.tasks
-          : [];
+        safeTasksFromData(data);
+
+      if(currentTasks === null){
+
+        throw new Error(
+          "Impossible d'ajouter : le champ tasks est absent ou invalide."
+        );
+
+      }
+
+      allowEmptyTaskSync = false;
 
       transaction.set(
         taskRef,
@@ -2223,9 +2435,15 @@ async function updateTaskSafely(
         snap.data();
 
       const currentTasks =
-        Array.isArray(data.tasks)
-          ? data.tasks
-          : [];
+        safeTasksFromData(data);
+
+      if(currentTasks === null){
+
+        throw new Error(
+          "Impossible de modifier : le champ tasks est absent ou invalide."
+        );
+
+      }
 
       const index =
         currentTasks.findIndex(
@@ -2249,6 +2467,14 @@ async function updateTaskSafely(
               ? updatedTask
               : task
         );
+
+      blockAccidentalTaskWipe(
+        currentTasks,
+        newTasks,
+        "modification"
+      );
+
+      allowEmptyTaskSync = (newTasks.length === 0);
 
       transaction.set(
         taskRef,
@@ -2297,14 +2523,28 @@ async function deleteTaskSafely(id){
         snap.data();
 
       const currentTasks =
-        Array.isArray(data.tasks)
-          ? data.tasks
-          : [];
+        safeTasksFromData(data);
+
+      if(currentTasks === null){
+
+        throw new Error(
+          "Impossible de supprimer : le champ tasks est absent ou invalide."
+        );
+
+      }
 
       const newTasks =
         currentTasks.filter(
           task => task.id !== id
         );
+
+      blockAccidentalTaskWipe(
+        currentTasks,
+        newTasks,
+        "suppression"
+      );
+
+      allowEmptyTaskSync = (newTasks.length === 0);
 
       transaction.set(
         taskRef,
@@ -2360,33 +2600,30 @@ $("add").onclick =
     }
 
     const newTask = {
+
       id:crypto.randomUUID(),
+
       text:text,
-      priority:$('priority').value,
-      assignee:selectedPeople,
+
+      priority:
+        $("priority").value,
+
+      assignee:
+        selectedPeople,
+
       done:false,
-      comments:[],
-      photos:[]
+
+      comments:[]
+
     };
 
-    let taskPhotos=[];
-    try{
-      taskPhotos=await compressSelectedPhotos($("taskPhotos"));
-    }catch(e){
-      alert("Impossible de préparer une des photos.");
-      return;
-    }
-
     try{
 
-      await addTaskSafely(newTask);
-      if(taskPhotos.length){
-        const ids=await savePhotos(taskPhotos,"task",newTask.id);
-        await updateTaskSafely(newTask.id,t=>({...t,photos:ids}));
-      }
+      await addTaskSafely(
+        newTask
+      );
+
       input.value = "";
-      $("taskPhotos").value = "";
-      $("taskPhotoPreview").innerHTML = "";
 
     }
     catch(e){
@@ -2403,9 +2640,6 @@ $("add").onclick =
     }
 
   };
-
-$("taskPhotos").addEventListener("change",()=>showPhotoPreview($("taskPhotos"),"taskPhotoPreview"));
-$("notePhotos").addEventListener("change",()=>showPhotoPreview($("notePhotos"),"notePhotoPreview"));
 
 /* ================================================= */
 /* ENTER POUR AJOUTER */
@@ -2430,7 +2664,7 @@ $("taskInput").onkeydown =
 /* AJOUT NOTE SECURISE */
 /* ================================================= */
 
-async function addNoteSafely(text, photoIds=[]){
+async function addNoteSafely(text){
 
   if(!currentUser || !selectedUser)
     return;
@@ -2448,9 +2682,7 @@ async function addNoteSafely(text, photoIds=[]){
 
     text:text,
 
-    createdAt:Date.now(),
-
-    photos:photoIds
+    createdAt:Date.now()
 
   };
 
@@ -2634,13 +2866,12 @@ $("addNote").onclick =
       true;
 
     try{
-      const photoData=await compressSelectedPhotos($("notePhotos"));
-      const tempId=crypto.randomUUID();
-      const photoIds=await savePhotos(photoData,"note",tempId);
-      await addNoteSafely(text,photoIds);
+
+      await addNoteSafely(
+        text
+      );
+
       input.value = "";
-      $("notePhotos").value = "";
-      $("notePhotoPreview").innerHTML = "";
 
     }
     catch(e){
@@ -2879,8 +3110,7 @@ function renderNotes(){
 
       element.append(
         head,
-        text,
-        renderPhotos(note.photos)
+        text
       );
 
       box.append(
@@ -2922,8 +3152,7 @@ function formatDate(timestamp){
 
 async function addCommentSafely(
   taskId,
-  text,
-  photoIds=[]
+  text
 ){
 
   if(
@@ -2945,9 +3174,7 @@ async function addCommentSafely(
 
     text:text,
 
-    createdAt:Date.now(),
-
-    photos:photoIds
+    createdAt:Date.now()
 
   };
 
@@ -2967,9 +3194,15 @@ async function addCommentSafely(
         snap.data();
 
       const currentTasks =
-        Array.isArray(data.tasks)
-          ? data.tasks
-          : [];
+        safeTasksFromData(data);
+
+      if(currentTasks === null){
+
+        throw new Error(
+          "Impossible d'ajouter le commentaire : le champ tasks est absent ou invalide."
+        );
+
+      }
 
       const index =
         currentTasks.findIndex(
@@ -3006,6 +3239,14 @@ async function addCommentSafely(
               ? task
               : item
         );
+
+      blockAccidentalTaskWipe(
+        currentTasks,
+        newTasks,
+        "commentaire"
+      );
+
+      allowEmptyTaskSync = false;
 
       transaction.set(
         taskRef,
@@ -3195,8 +3436,7 @@ function createDiscussion(
 
         message.append(
           head,
-          text,
-          renderPhotos(comment.photos)
+          text
         );
 
         messages.append(
@@ -3231,19 +3471,6 @@ function createDiscussion(
   input.placeholder =
     "Écrire un commentaire...";
 
-  const photoInput=document.createElement("input");
-  photoInput.type="file";
-  photoInput.accept="image/*";
-  photoInput.multiple=true;
-  photoInput.style.display="none";
-
-  const photoButton=document.createElement("button");
-  photoButton.type="button";
-  photoButton.className="secondary";
-  photoButton.textContent="📷";
-  photoButton.title="Ajouter des photos";
-  photoButton.onclick=()=>photoInput.click();
-
   const send =
     document.createElement(
       "button"
@@ -3271,17 +3498,21 @@ function createDiscussion(
     if(!text)
       return;
 
-    send.disabled = true;
-    status.textContent = "Enregistrement...";
+    send.disabled =
+      true;
+
+    status.textContent =
+      "Enregistrement...";
 
     try{
-      const photoData=await compressSelectedPhotos(photoInput);
-      const commentId=crypto.randomUUID();
-      const photoIds=await savePhotos(photoData,"comment",commentId);
-      await addCommentSafely(task.id,text,photoIds);
 
-      input.value = "";
-      photoInput.value = "";
+      await addCommentSafely(
+        task.id,
+        text
+      );
+
+      input.value =
+        "";
 
       status.textContent =
         "✓ Envoyé";
@@ -3338,9 +3569,7 @@ function createDiscussion(
 
   form.append(
     input,
-    photoButton,
-    send,
-    photoInput
+    send
   );
 
   container.append(
@@ -4064,7 +4293,6 @@ function render(){
       mid.append(
         title,
         info,
-        renderPhotos(task.photos),
         discussion
       );
 
