@@ -17,7 +17,7 @@
 
 <meta
   name="description"
-  content="WorkBoard synchronisé"
+  content="Passage d'infos"
 >
 
 <link rel="manifest" href="manifest.json">
@@ -27,7 +27,7 @@
   href="icons/icon-192.png"
 >
 
-<title>WorkBoard — Synchronisé</title>
+<title>Passage d'infos</title>
 
 <style>
 
@@ -512,9 +512,53 @@ button:disabled{
 
 .user-choice-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
 }
+
+.pole-choice{
+  min-height:110px;
+  font-size:20px;
+  font-weight:800;
+  border:2px solid transparent;
+}
+
+.pole-choice.coupe{
+  background:#e4efff;
+  color:#245f9b;
+}
+
+.pole-choice.pvc{
+  background:#fff0c7;
+  color:#8a6500;
+}
+
+.user-choice.operator{
+  background:#eef3f7;
+  color:#29465c;
+}
+
+.user-choice.operator:hover,
+.pole-choice:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px #17324d18;
+}
+
+.operator-initials{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#dbe7ef;
+  color:#29465c;
+  font-weight:800;
+  flex:0 0 auto;
+}
+
+.chooser-back{ margin-bottom:12px; }
+.chooser-pole-title{ text-align:center; margin:0 0 14px; }
 
 .user-choice{
   min-height:90px;
@@ -873,10 +917,10 @@ button:disabled{
 
 <div id="login" class="card login">
 
-  <h1>WorkBoard</h1>
+  <h1>Passage d'infos</h1>
 
   <p class="small">
-    Connecte-toi avec ton compte WorkBoard.
+    Connecte-toi avec ton compte Passage d'infos.
   </p>
 
   <input
@@ -917,57 +961,22 @@ button:disabled{
 <!-- CHOIX UTILISATEUR -->
 <!-- ================================================= -->
 
-<div
-  id="userChooser"
-  class="card"
->
+<div id="userChooser" class="card">
 
-  <h1 class="user-choice-title">
-    Qui êtes-vous ?
-  </h1>
+  <h1 class="user-choice-title">Passage d'infos</h1>
 
-  <div class="user-choice-subtitle">
-    Sélectionnez votre nom pour utiliser WorkBoard.
+  <div id="poleChooser">
+    <div class="user-choice-subtitle">Choisissez votre pôle.</div>
+    <div class="user-choice-grid">
+      <button class="user-choice pole-choice coupe" data-pole="Coupe"><span>Coupe</span></button>
+      <button class="user-choice pole-choice pvc" data-pole="PVC"><span>PVC</span></button>
+    </div>
   </div>
 
-  <div class="user-choice-grid">
-
-    <button
-      class="user-choice yannis"
-      data-user="Yannis"
-    >
-      <img
-        class="user-choice-avatar"
-        src="Yannis.png"
-        alt="Yannis"
-      >
-      <span>Yannis</span>
-    </button>
-
-    <button
-      class="user-choice jean-luc"
-      data-user="Jean-Luc"
-    >
-      <img
-        class="user-choice-avatar"
-        src="Jean-Luc.png"
-        alt="Jean-Luc"
-      >
-      <span>Jean-Luc</span>
-    </button>
-
-    <button
-      class="user-choice catherine"
-      data-user="Catherine"
-    >
-      <img
-        class="user-choice-avatar"
-        src="Catherine.png"
-        alt="Catherine"
-      >
-      <span>Catherine</span>
-    </button>
-
+  <div id="operatorChooser" style="display:none">
+    <button id="backToPoles" class="secondary chooser-back">← Retour aux pôles</button>
+    <h2 id="operatorPoleTitle" class="chooser-pole-title"></h2>
+    <div id="operatorChoiceGrid" class="user-choice-grid"></div>
   </div>
 
 </div>
@@ -1031,10 +1040,10 @@ button:disabled{
 
   <div>
 
-    <h1>WorkBoard</h1>
+    <h1>Passage d'infos</h1>
 
     <div class="sub">
-      Tâches professionnelles — synchronisées
+      Passage d'informations — synchronisé
     </div>
 
     <div
@@ -1049,7 +1058,7 @@ button:disabled{
       <img
         id="currentUserAvatar"
         class="avatar"
-        src="Yannis.png"
+        src=""
         alt=""
       >
 
@@ -1200,7 +1209,7 @@ button:disabled{
     class="small"
     style="margin-bottom:12px"
   >
-    Notes partagées entre Catherine, Jean-Luc et Yannis.
+    Notes partagées entre les opérateurs du pôle.
   </div>
 
   <div
@@ -1277,67 +1286,7 @@ button:disabled{
     <div
       class="assignees"
       id="assignees"
-    >
-
-      <label class="person-checkbox yannis">
-
-        <input
-          type="checkbox"
-          value="Yannis"
-          checked
-        >
-
-        <img
-          class="assignee-avatar"
-          src="Yannis.png"
-          alt="Yannis"
-        >
-
-        <span>
-          Yannis
-        </span>
-
-      </label>
-
-      <label class="person-checkbox jean-luc">
-
-        <input
-          type="checkbox"
-          value="Jean-Luc"
-        >
-
-        <img
-          class="assignee-avatar"
-          src="Jean-Luc.png"
-          alt="Jean-Luc"
-        >
-
-        <span>
-          Jean-Luc
-        </span>
-
-      </label>
-
-      <label class="person-checkbox catherine">
-
-        <input
-          type="checkbox"
-          value="Catherine"
-        >
-
-        <img
-          class="assignee-avatar"
-          src="Catherine.png"
-          alt="Catherine"
-        >
-
-        <span>
-          Catherine
-        </span>
-
-      </label>
-
-    </div>
+    ></div>
 
   </div>
 
@@ -1401,28 +1350,7 @@ button:disabled{
   <div
     class="filters"
     id="peopleFilters"
-  >
-
-    <button
-      class="active"
-      id="allPeople"
-    >
-      Tous
-    </button>
-
-    <button id="jeanLucFilter">
-      Jean-Luc
-    </button>
-
-    <button id="catherineFilter">
-      Catherine
-    </button>
-
-    <button id="yannisFilter">
-      Yannis
-    </button>
-
-  </div>
+  ></div>
 
   <div id="tasks"></div>
 
@@ -1481,6 +1409,13 @@ const auth =
 const db =
   getFirestore(app);
 
+const OPERATOR_POLES = {
+  "Coupe":["Nicolas","Loïc","Marlon","Baptiste","Quentin","Timothé","Théo","Serge"],
+  "PVC":["Betty","Bérénice","Séverine","Mélanie.K","Mélanie.R","Irène","Jessica","Myriam","Aurélie","Hélène"]
+};
+
+let selectedPole = null;
+
 /* ================================================= */
 /* VARIABLES */
 /* ================================================= */
@@ -1526,17 +1461,20 @@ const $ =
 /* PHOTOS UTILISATEURS */
 /* ================================================= */
 
-const personPhotos = {
-  "Yannis":"Yannis.png",
-  "Catherine":"Catherine.png",
-  "Jean-Luc":"Jean-Luc.png"
-};
+function getPersonInitials(name){
+  const clean = String(name || "?").trim();
+  if(clean.includes(".")){
+    return clean.split(".")[0].slice(0,2).toUpperCase();
+  }
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if(parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return clean.slice(0,2).toUpperCase();
+}
 
 function getPersonPhoto(name){
-
-  return personPhotos[name]
-    || "Yannis.png";
-
+  const initials = getPersonInitials(name);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="48" fill="#dbe7ef"/><text x="48" y="54" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#29465c">${initials}</text></svg>`;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
 function updateCurrentUserAvatar(){
@@ -1619,7 +1557,7 @@ async function hashPin(pin){
 
 function profileRef(uid){
 
-  return doc(db,"users",uid,"days","profile");
+  return doc(db,"users",uid,"days","operator_profile");
 
 }
 
@@ -1795,313 +1733,83 @@ function finishPinLogin(){
 }
 
 function showUserChooser(){
-
-  if(unsub){
-    unsub();
-    unsub = null;
-  }
-
-  tasks = [];
-  notes = [];
-  selectedUser = null;
+  if(unsub){ unsub(); unsub=null; }
+  tasks=[]; notes=[]; selectedUser=null; selectedPole=null;
   sessionStorage.removeItem("workboardUser");
+  sessionStorage.removeItem("workboardPole");
+  $("login").style.display="none";
+  $("app").style.display="none";
+  $("pinModal").style.display="none";
+  $("userChooser").style.display="block";
+  $("poleChooser").style.display="block";
+  $("operatorChooser").style.display="none";
+}
 
-  $("login").style.display = "none";
-  $("app").style.display = "none";
-  $("pinModal").style.display = "none";
-  $("userChooser").style.display = "block";
-
+function showOperatorChooser(pole){
+  selectedPole=pole;
+  sessionStorage.setItem("workboardPole",pole);
+  $("poleChooser").style.display="none";
+  $("operatorChooser").style.display="block";
+  $("operatorPoleTitle").textContent=`Pôle ${pole}`;
+  const grid=$("operatorChoiceGrid");
+  grid.innerHTML="";
+  (OPERATOR_POLES[pole] || []).forEach(name=>{
+    const button=document.createElement("button");
+    button.className="user-choice operator";
+    const avatar=document.createElement("span");
+    avatar.className="operator-initials";
+    avatar.textContent=getPersonInitials(name);
+    const label=document.createElement("span");
+    label.textContent=name;
+    button.append(avatar,label);
+    button.onclick=()=>openPinModal(name);
+    grid.append(button);
+  });
 }
 
 function showApplication(){
-
-  $("login").style.display = "none";
-  $("userChooser").style.display = "none";
-  $("pinModal").style.display = "none";
-  $("app").style.display = "block";
-
-  $("currentUserName").textContent = selectedUser;
+  $("login").style.display="none";
+  $("userChooser").style.display="none";
+  $("pinModal").style.display="none";
+  $("app").style.display="block";
+  $("currentUserName").textContent=selectedUser;
   updateCurrentUserAvatar();
+  populateOperatorAssignees();
+  populateOperatorFilters();
+}
 
+function populateOperatorAssignees(){
+  const box=$("assignees");
+  if(!box) return;
+  box.innerHTML="";
+  (OPERATOR_POLES[selectedPole] || []).forEach(person=>{
+    const label=document.createElement("label");
+    label.className="person-checkbox operator";
+    const checkbox=document.createElement("input");
+    checkbox.type="checkbox"; checkbox.value=person; checkbox.checked=person===selectedUser;
+    const avatar=document.createElement("img"); avatar.className="assignee-avatar"; avatar.src=getPersonPhoto(person); avatar.alt=person;
+    const span=document.createElement("span"); span.textContent=person;
+    label.append(checkbox,avatar,span); box.append(label);
+  });
+}
+
+function populateOperatorFilters(){
+  const box=$("peopleFilters"); if(!box) return;
+  box.innerHTML="";
+  const all=document.createElement("button"); all.id="allPeople"; all.className="active"; all.textContent="Tous"; all.onclick=()=>setPersonFilter("all"); box.append(all);
+  (OPERATOR_POLES[selectedPole] || []).forEach(person=>{ const b=document.createElement("button"); b.textContent=person; b.onclick=()=>setPersonFilter(person); box.append(b); });
 }
 
 /* ================================================= */
 /* BOUTONS UTILISATEURS */
 /* ================================================= */
-
-document
-  .querySelectorAll(".user-choice")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-        openPinModal(button.dataset.user);
-      }
-    );
-
-  });
-
-$("pinSubmit").onclick = validatePin;
-
-$("pinCancel").onclick = closePinModal;
-
-$("pinInput").addEventListener("input", () => {
-  $("pinInput").value = $("pinInput").value.replace(/\D/g,"").slice(0,4);
-});
-
-$("pinConfirm").addEventListener("input", () => {
-  $("pinConfirm").value = $("pinConfirm").value.replace(/\D/g,"").slice(0,4);
-});
-
-$("pinInput").addEventListener("keydown", e => {
-  if(e.key === "Enter") validatePin();
-});
-
-$("pinConfirm").addEventListener("keydown", e => {
-  if(e.key === "Enter") validatePin();
-});
-
-/* ================================================= */
-/* CHANGER D'UTILISATEUR */
-/* ================================================= */
-
-$("changeUser").onclick = () => {
-
-  showUserChooser();
-
-};
-
-/* ================================================= */
-/* MESSAGE LOGIN */
-/* ================================================= */
-
-function showMsg(x){
-
-  $("loginMsg").textContent =
-    x;
-
-  $("loginMsg").style.display =
-    "block";
-
-}
-
-/* ================================================= */
-/* ERREURS FIREBASE */
-/* ================================================= */
-
-function friendly(c){
-
-  if(
-    c.includes("invalid-credential")
-  )
-    return "e-mail ou mot de passe incorrect.";
-
-  if(
-    c.includes("email-already")
-  )
-    return "ce compte existe déjà.";
-
-  if(
-    c.includes("weak-password")
-  )
-    return "mot de passe trop court.";
-
-  if(
-    c.includes("invalid-email")
-  )
-    return "adresse e-mail invalide.";
-
-  return "Une erreur est survenue.";
-
-}
-
-/* ================================================= */
-/* CONNEXION */
-/* ================================================= */
-
-$("signin").addEventListener(
-  "click",
-  async e => {
-
-    e.preventDefault();
-
-    const email =
-      $("email")
-        .value
-        .trim();
-
-    const password =
-      $("password")
-        .value;
-
-    if(!email || !password){
-
-      showMsg(
-        "Merci de renseigner l'e-mail et le mot de passe."
-      );
-
-      return;
-
-    }
-
-    const button =
-      $("signin");
-
-    button.disabled =
-      true;
-
-    button.textContent =
-      "Connexion...";
-
-    try{
-
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    }
-    catch(e){
-
-      console.error(
-        "Erreur de connexion Firebase :",
-        e
-      );
-
-      showMsg(
-        friendly(
-          e.code || ""
-        )
-      );
-
-    }
-    finally{
-
-      button.disabled =
-        false;
-
-      button.textContent =
-        "Se connecter";
-
-    }
-
-  }
-);
-
-/* ================================================= */
-/* CREATION COMPTE */
-/* ================================================= */
-
-$("signup").addEventListener(
-  "click",
-  async e => {
-
-    e.preventDefault();
-
-    const email =
-      $("email")
-        .value
-        .trim();
-
-    const password =
-      $("password")
-        .value;
-
-    if(!email || !password){
-
-      showMsg(
-        "Merci de renseigner l'e-mail et le mot de passe."
-      );
-
-      return;
-
-    }
-
-    try{
-
-      await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-    }
-    catch(e){
-
-      console.error(
-        "Erreur de création :",
-        e
-      );
-
-      showMsg(
-        friendly(
-          e.code || ""
-        )
-      );
-
-    }
-
-  }
-);
-
-/* ================================================= */
-/* DECONNEXION */
-/* ================================================= */
-
-$("logout").onclick =
-  () => signOut(auth);
-
-/* ================================================= */
-/* AUTHENTIFICATION */
-/* ================================================= */
-
-onAuthStateChanged(
-  auth,
-  user => {
-
-    currentUser =
-      user;
-
-    if(!user){
-
-      if(unsub){
-
-        unsub();
-
-        unsub = null;
-
-      }
-
-      $("login").style.display =
-        "block";
-
-      $("userChooser").style.display =
-        "none";
-
-      $("app").style.display =
-        "none";
-
-      $("status").innerHTML =
-        '<span class="dot"></span>Déconnecté';
-
-      $("status").className = "";
-
-      return;
-
-    }
-
-    $("status").innerHTML =
-      '<span class="dot"></span>Connexion...';
-
-    $("status").className =
-      "online";
-
-    showUserChooser();
-
-  }
-);
+document.querySelectorAll("[data-pole]").forEach(button=>{ button.onclick=()=>showOperatorChooser(button.dataset.pole); });
+$("backToPoles").onclick=()=>{ selectedPole=null; $("poleChooser").style.display="block"; $("operatorChooser").style.display="none"; };
+$("pinSubmit").onclick=validatePin;
+$("pinCancel").onclick=closePinModal;
+$("pinInput").addEventListener("input",()=>{ $("pinInput").value=$("pinInput").value.replace(/\D/g,"").slice(0,4); });
+$("pinConfirm").addEventListener("input",()=>{ $("pinConfirm").value=$("pinConfirm").value.replace(/\D/g,"").slice(0,4); });
+$("changeUser").onclick=showUserChooser;
 
 /* ================================================= */
 /* REFERENCE FIRESTORE */
@@ -2109,13 +1817,7 @@ onAuthStateChanged(
 
 function ref(uid){
 
-  return doc(
-    db,
-    "users",
-    uid,
-    "days",
-    day
-  );
+  return doc(db,"users",uid,"days","operator_" + day);
 
 }
 
@@ -3687,56 +3389,14 @@ $("doneFilter").onclick =
 /* FILTRE RESPONSABLE */
 /* ================================================= */
 
-function setPersonFilter(
-  person
-){
-
-  personFilter =
-    person;
-
-  document
-    .querySelectorAll(
-      "#peopleFilters button"
-    )
-    .forEach(
-      b =>
-        b.classList.remove(
-          "active"
-        )
-    );
-
-  const buttonId =
-
-    person === "all"
-      ? "allPeople"
-
-    : person === "Jean-Luc"
-      ? "jeanLucFilter"
-
-    : person === "Catherine"
-      ? "catherineFilter"
-
-    : "yannisFilter";
-
-  $(buttonId)
-    .classList
-    .add("active");
-
+function setPersonFilter(person){
+  personFilter=person;
+  document.querySelectorAll("#peopleFilters button").forEach(b=>b.classList.remove("active"));
+  const buttons=Array.from(document.querySelectorAll("#peopleFilters button"));
+  const active=buttons.find(b=>(person==="all" && b.id==="allPeople") || (person!=="all" && b.textContent===person));
+  if(active) active.classList.add("active");
   render();
-
 }
-
-$("allPeople").onclick =
-  () => setPersonFilter("all");
-
-$("jeanLucFilter").onclick =
-  () => setPersonFilter("Jean-Luc");
-
-$("catherineFilter").onclick =
-  () => setPersonFilter("Catherine");
-
-$("yannisFilter").onclick =
-  () => setPersonFilter("Yannis");
 
 /* ================================================= */
 /* AFFICHAGE TACHES */
@@ -3779,7 +3439,7 @@ function render(){
 
             : task.assignee
               ? [task.assignee]
-              : ["Yannis"];
+              : [selectedUser || (OPERATOR_POLES[selectedPole] || [""])[0]];
 
         const matchesPerson =
 
@@ -3867,7 +3527,7 @@ function render(){
 
           : task.assignee
             ? [task.assignee]
-            : ["Yannis"];
+            : [selectedUser || (OPERATOR_POLES[selectedPole] || [""])[0]];
 
       const responsible =
         document.createElement(
@@ -3888,35 +3548,7 @@ function render(){
           badge.className =
             "assignee-badge";
 
-          if(
-            person === "Yannis"
-          ){
-
-            badge.classList.add(
-              "assignee-yannis"
-            );
-
-          }
-
-          if(
-            person === "Jean-Luc"
-          ){
-
-            badge.classList.add(
-              "assignee-jean-luc"
-            );
-
-          }
-
-          if(
-            person === "Catherine"
-          ){
-
-            badge.classList.add(
-              "assignee-catherine"
-            );
-
-          }
+          badge.classList.add("assignee-operator");
 
           const avatar =
             document.createElement(
@@ -4084,13 +3716,9 @@ function render(){
 
               : task.assignee
                 ? [task.assignee]
-                : ["Yannis"];
+                : [selectedUser || (OPERATOR_POLES[selectedPole] || [""])[0]];
 
-          [
-            "Yannis",
-            "Jean-Luc",
-            "Catherine"
-          ]
+          (OPERATOR_POLES[selectedPole] || [])
           .forEach(
             person => {
 
@@ -4100,17 +3728,7 @@ function render(){
                 );
 
               label.className =
-                "person-checkbox " +
-
-                (
-                  person === "Yannis"
-                    ? "yannis"
-
-                  : person === "Jean-Luc"
-                    ? "jean-luc"
-
-                  : "catherine"
-                );
+                "person-checkbox operator";
 
               const checkbox =
                 document.createElement(
