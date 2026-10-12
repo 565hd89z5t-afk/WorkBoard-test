@@ -259,6 +259,39 @@ button:disabled{
   align-items:center;
 }
 
+.machine-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.machine-label{
+  font-weight:700;
+  font-size:14px;
+}
+
+.machine-select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #d4dce3;
+  border-radius:9px;
+  font-size:14px;
+  background:#fff;
+}
+
+.machine-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 8px;
+  border-radius:8px;
+  background:#e8f0f8;
+  color:#29465c;
+  font-size:11px;
+  font-weight:800;
+  margin-top:6px;
+}
+
 .person-checkbox{
   position:relative;
   cursor:pointer;
@@ -1264,6 +1297,16 @@ button:disabled{
       placeholder="Ex. Envoyer le dossier au client..."
     >
 
+    <div id="machineField" class="machine-field">
+
+      <label class="machine-label" for="machineSelect">Machine</label>
+
+      <select id="machineSelect" class="machine-select">
+
+      </select>
+
+    </div>
+
     <select id="priority">
 
       <option value="high">
@@ -1412,6 +1455,24 @@ const db =
 const OPERATOR_POLES = {
   "Coupe":["Nicolas","Loïc","Marlon","Baptiste","Quentin","Timothé","Théo","Serge"],
   "PVC":["Betty","Bérénice","Séverine","Mélanie.K","Mélanie.R","Irène","Jessica","Myriam","Aurélie","Hélène"]
+};
+
+const COUPE_MACHINES = {
+  "M1":["Loïc","Nicolas","Marlon","Baptiste"],
+  "M2":["Théo","Timothé","Quentin"],
+  "PAC2000":["Loïc","Serge","Quentin","Nicolas"],
+  "SMRE375":["Marlon","Baptiste","Nicolas"]
+};
+
+const MACHINES_BY_PERSON = {
+  "Loïc":["M1","PAC2000"],
+  "Nicolas":["M1","PAC2000","SMRE375"],
+  "Marlon":["M1","SMRE375"],
+  "Baptiste":["M1","SMRE375"],
+  "Quentin":["M2","PAC2000"],
+  "Timothé":["M2"],
+  "Théo":["M2"],
+  "Serge":["PAC2000"]
 };
 
 let selectedPole = null;
@@ -1774,22 +1835,101 @@ function showApplication(){
   $("app").style.display="block";
   $("currentUserName").textContent=selectedUser;
   updateCurrentUserAvatar();
-  populateOperatorAssignees();
+  populateOperatorMachineAndAssignees();
   populateOperatorFilters();
 }
 
-function populateOperatorAssignees(){
+function getMachinesForSelectedUser(){
+  if(selectedPole !== "Coupe") return [];
+  return MACHINES_BY_PERSON[selectedUser] || [];
+}
+
+function getPeopleForMachine(machine){
+  if(selectedPole !== "Coupe") return OPERATOR_POLES[selectedPole] || [];
+  return COUPE_MACHINES[machine] || [];
+}
+
+function populateOperatorMachineAndAssignees(){
+
+  const field = $("machineField");
+  const select = $("machineSelect");
+  const box = $("assignees");
+
+  if(!field || !select || !box) return;
+
+  if(selectedPole !== "Coupe"){
+
+    field.style.display = "none";
+    box.innerHTML = "";
+
+    (OPERATOR_POLES[selectedPole] || [])
+      .filter(person => person !== selectedUser)
+      .forEach(person => {
+        const label=document.createElement("label");
+        label.className="person-checkbox operator";
+        const checkbox=document.createElement("input");
+        checkbox.type="checkbox";
+        checkbox.value=person;
+        const avatar=document.createElement("img");
+        avatar.className="assignee-avatar";
+        avatar.src=getPersonPhoto(person);
+        avatar.alt=person;
+        const span=document.createElement("span");
+        span.textContent=person;
+        label.append(checkbox,avatar,span);
+        box.append(label);
+      });
+
+    return;
+  }
+
+  field.style.display = "flex";
+  const machines = getMachinesForSelectedUser();
+  select.innerHTML = "";
+
+  machines.forEach((machine,index) => {
+    const option=document.createElement("option");
+    option.value=machine;
+    option.textContent=machine;
+    if(index===0) option.selected=true;
+    select.append(option);
+  });
+
+  renderMachineAssignees(select.value);
+
+  select.onchange = () => renderMachineAssignees(select.value);
+}
+
+function renderMachineAssignees(machine, checkedPeople=[]){
+
   const box=$("assignees");
   if(!box) return;
+
   box.innerHTML="";
-  (OPERATOR_POLES[selectedPole] || []).forEach(person=>{
+
+  const people=getPeopleForMachine(machine)
+    .filter(person => person !== selectedUser);
+
+  people.forEach(person => {
+
     const label=document.createElement("label");
     label.className="person-checkbox operator";
+
     const checkbox=document.createElement("input");
-    checkbox.type="checkbox"; checkbox.value=person; checkbox.checked=person===selectedUser;
-    const avatar=document.createElement("img"); avatar.className="assignee-avatar"; avatar.src=getPersonPhoto(person); avatar.alt=person;
-    const span=document.createElement("span"); span.textContent=person;
-    label.append(checkbox,avatar,span); box.append(label);
+    checkbox.type="checkbox";
+    checkbox.value=person;
+    checkbox.checked=checkedPeople.includes(person);
+
+    const avatar=document.createElement("img");
+    avatar.className="assignee-avatar";
+    avatar.src=getPersonPhoto(person);
+    avatar.alt=person;
+
+    const span=document.createElement("span");
+    span.textContent=person;
+
+    label.append(checkbox,avatar,span);
+    box.append(label);
   });
 }
 
@@ -2421,6 +2561,17 @@ $("add").onclick =
 
     }
 
+    let machine = null;
+
+    if(selectedPole === "Coupe"){
+      machine = $("machineSelect").value;
+
+      if(!machine){
+        alert("Merci de sélectionner une machine.");
+        return;
+      }
+    }
+
     const newTask = {
 
       id:crypto.randomUUID(),
@@ -2429,6 +2580,8 @@ $("add").onclick =
 
       priority:
         $("priority").value,
+
+      machine:machine,
 
       assignee:
         selectedPeople,
@@ -2446,6 +2599,9 @@ $("add").onclick =
       );
 
       input.value = "";
+
+      if(selectedPole === "Coupe")
+        renderMachineAssignees($("machineSelect").value);
 
     }
     catch(e){
@@ -3448,7 +3604,8 @@ async function editTask(
   id,
   newText,
   newPriority,
-  newAssignees
+  newAssignees,
+  newMachine
 ){
 
   await updateTaskSafely(
@@ -3457,6 +3614,7 @@ async function editTask(
       ...task,
       text:newText,
       priority:newPriority,
+      machine:newMachine || null,
       assignee:newAssignees
     })
   );
@@ -3706,6 +3864,13 @@ function render(){
         }
       );
 
+      if(task.machine){
+        const machineBadge=document.createElement("span");
+        machineBadge.className="machine-badge";
+        machineBadge.textContent="Machine : " + task.machine;
+        responsible.append(machineBadge);
+      }
+
       const priorityBadge =
         document.createElement(
           "span"
@@ -3818,6 +3983,41 @@ function render(){
             task.priority ||
             "med";
 
+          const editMachine =
+            document.createElement(
+              "select"
+            );
+
+          editMachine.className =
+            "machine-select";
+
+          let editPeople = [];
+
+          if(selectedPole === "Coupe"){
+
+            const machines = getMachinesForSelectedUser();
+            machines.forEach(machine => {
+              const option=document.createElement("option");
+              option.value=machine;
+              option.textContent=machine;
+              editMachine.append(option);
+            });
+
+            const taskMachine = task.machine && machines.includes(task.machine)
+              ? task.machine
+              : (machines[0] || "");
+
+            editMachine.value=taskMachine;
+            editPeople=getPeopleForMachine(taskMachine)
+              .filter(person => person !== selectedUser);
+
+          }
+          else{
+            editMachine.style.display="none";
+            editPeople=(OPERATOR_POLES[selectedPole] || [])
+              .filter(person => person !== selectedUser);
+          }
+
           const editAssignees =
             document.createElement(
               "div"
@@ -3827,81 +4027,44 @@ function render(){
             "assignees";
 
           const currentPeople =
-
-            Array.isArray(
-              task.assignee
-            )
-
+            Array.isArray(task.assignee)
               ? task.assignee
-
               : task.assignee
                 ? [task.assignee]
-                : [selectedUser || (OPERATOR_POLES[selectedPole] || [""])[0]];
+                : [];
 
-          (OPERATOR_POLES[selectedPole] || [])
-          .forEach(
-            person => {
+          function renderEditAssignees(){
+            editAssignees.innerHTML="";
 
-              const label =
-                document.createElement(
-                  "label"
-                );
+            const people = selectedPole === "Coupe"
+              ? getPeopleForMachine(editMachine.value).filter(person => person !== selectedUser)
+              : (OPERATOR_POLES[selectedPole] || []).filter(person => person !== selectedUser);
 
-              label.className =
-                "person-checkbox operator";
+            people.forEach(person => {
+              const label=document.createElement("label");
+              label.className="person-checkbox operator";
 
-              const checkbox =
-                document.createElement(
-                  "input"
-                );
+              const checkbox=document.createElement("input");
+              checkbox.type="checkbox";
+              checkbox.value=person;
+              checkbox.checked=currentPeople.includes(person);
 
-              checkbox.type =
-                "checkbox";
+              const span=document.createElement("span");
+              span.textContent=person;
 
-              checkbox.value =
-                person;
+              const avatar=document.createElement("img");
+              avatar.className="assignee-avatar";
+              avatar.src=getPersonPhoto(person);
+              avatar.alt=person;
 
-              checkbox.checked =
-                currentPeople.includes(
-                  person
-                );
+              label.append(checkbox,avatar,span);
+              editAssignees.append(label);
+            });
+          }
 
-              const span =
-                document.createElement(
-                  "span"
-                );
+          renderEditAssignees();
 
-              span.textContent =
-                person;
-
-              const avatar =
-                document.createElement(
-                  "img"
-                );
-
-              avatar.className =
-                "assignee-avatar";
-
-              avatar.src =
-                getPersonPhoto(
-                  person
-                );
-
-              avatar.alt =
-                person;
-
-              label.append(
-                checkbox,
-                avatar,
-                span
-              );
-
-              editAssignees.append(
-                label
-              );
-
-            }
-          );
+          editMachine.onchange = () => renderEditAssignees();
 
           const saveBtn =
             document.createElement(
@@ -3951,11 +4114,22 @@ function render(){
 
               }
 
+              const newMachine =
+                selectedPole === "Coupe"
+                  ? editMachine.value
+                  : null;
+
+              if(selectedPole === "Coupe" && !newMachine){
+                alert("Merci de sélectionner une machine.");
+                return;
+              }
+
               await editTask(
                 task.id,
                 newText,
                 select.value,
-                selectedPeople
+                selectedPeople,
+                newMachine
               );
 
             };
@@ -3979,6 +4153,7 @@ function render(){
 
           form.append(
             input,
+            editMachine,
             select,
             editAssignees
           );
