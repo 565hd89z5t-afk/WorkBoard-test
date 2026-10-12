@@ -2175,14 +2175,30 @@ async function addTaskSafely(task){
           ? snap.data()
           : {};
 
-      const currentTasks =
-        safeTasksFromData(data);
+      /*
+       * Pour une première tâche, le document de la journée peut ne pas
+       * encore exister. Dans ce cas, on démarre avec une liste vide.
+       * En revanche, si le document existe mais que le champ tasks est
+       * absent/invalide, on bloque l'écriture pour ne rien écraser.
+       */
+      let currentTasks;
 
-      if(currentTasks === null){
+      if(!snap.exists()) {
 
-        throw new Error(
-          "Impossible d'ajouter : le champ tasks est absent ou invalide."
-        );
+        currentTasks = [];
+
+      }
+      else {
+
+        currentTasks = safeTasksFromData(data);
+
+        if(currentTasks === null){
+
+          throw new Error(
+            "Impossible d'ajouter : le champ tasks est absent ou invalide."
+          );
+
+        }
 
       }
 
