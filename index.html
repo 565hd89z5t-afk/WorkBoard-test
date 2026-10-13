@@ -2015,23 +2015,33 @@ function renderMachineAssignees(machine, checkedPeople=[]){
   });
 }
 
+function getPeopleForCurrentOperatorMachines(){
+  const allowed = new Set();
+  const machines = getMachinesForSelectedUser();
+  machines.forEach(machine => {
+    getPeopleForMachine(machine).forEach(person => allowed.add(person));
+  });
+  // Inclure l'opérateur connecté même si une ancienne configuration de machine est incomplète.
+  if(selectedUser) allowed.add(selectedUser);
+  return [...allowed];
+}
+
 function populateOperatorFilters(){
   const box=$("peopleFilters"); if(!box) return;
   box.innerHTML="";
+  const allowedPeople = getPeopleForCurrentOperatorMachines();
+  if(personFilter !== "all" && !allowedPeople.includes(personFilter)) personFilter = "all";
   const all=document.createElement("button");
   all.id="allPeople";
-  all.className="active";
+  all.className=personFilter === "all" ? "active" : "";
   all.textContent="Tous";
   all.onclick=()=>setPersonFilter("all");
   box.append(all);
 
-  const people = selectedPole === "PVC"
-    ? (PVC_POLES[selectedPvcPole] || [])
-    : (OPERATOR_POLES[selectedPole] || []);
-
-  people.forEach(person=>{
+  allowedPeople.forEach(person=>{
     const b=document.createElement("button");
     b.textContent=person;
+    if(personFilter === person) b.classList.add("active");
     b.onclick=()=>setPersonFilter(person);
     box.append(b);
   });
@@ -2997,17 +3007,24 @@ function renderNotes(){
   box.innerHTML =
     "";
 
-  if(!notes.length){
+  const allowedAuthors = new Set(getPeopleForCurrentOperatorMachines());
+  const visibleNotes = notes.filter(note => {
+    // Les anciennes notes sans auteur reconnu restent masquées pour éviter d'exposer
+    // les notes d'autres machines/pôles à un opérateur.
+    return note.author && allowedAuthors.has(note.author);
+  });
+
+  if(!visibleNotes.length){
 
     box.innerHTML =
-      '<div class="empty-discussion">Aucune note pour le moment.</div>';
+      '<div class="empty-discussion">Aucune note pour les opérateurs de tes machines.</div>';
 
     return;
 
   }
 
   const sorted =
-    [...notes].sort(
+    [...visibleNotes].sort(
       (a,b) =>
         (a.createdAt || 0) -
         (b.createdAt || 0)
