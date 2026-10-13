@@ -2180,7 +2180,7 @@ function ref(uid){
 
 /* Les tâches vivent dans un document permanent, indépendant du jour. */
 function taskRef(uid){
-  return doc(db,"users",uid,"days","operator_tasks");
+  return doc(db,"users",uid,"days","operator_tasks_v2");
 }
 
 /* ================================================= */
@@ -2245,6 +2245,10 @@ function listen(uid){
         const now = Date.now();
 
         daysSnapshot.forEach(daySnapshot => {
+          /* IMPORTANT : ne migrer que les anciens documents quotidiens de Passage d'infos.
+             Les documents du WorkBoard Chef portent d'autres identifiants et sont ignorés.
+             On ignore aussi operator_tasks, qui peut contenir l'import erroné précédent. */
+          if(!/^operator_\d{4}-\d{2}-\d{2}$/.test(daySnapshot.id)) return;
           const oldData = daySnapshot.data();
           if(Array.isArray(oldData.tasks)){
             oldData.tasks.forEach(task => {
