@@ -2245,9 +2245,8 @@ function listen(uid){
         const now = Date.now();
 
         daysSnapshot.forEach(daySnapshot => {
-          /* IMPORTANT : ne migrer que les anciens documents quotidiens de Passage d'infos.
-             Les documents du WorkBoard Chef portent d'autres identifiants et sont ignorés.
-             On ignore aussi operator_tasks, qui peut contenir l'import erroné précédent. */
+          /* Importer uniquement les anciens documents journaliers de Passage d'infos.
+             Ne jamais importer WorkBoard Chef ni les anciens documents permanents. */
           if(!/^operator_\d{4}-\d{2}-\d{2}$/.test(daySnapshot.id)) return;
           const oldData = daySnapshot.data();
           if(Array.isArray(oldData.tasks)){
@@ -2687,6 +2686,9 @@ $("add").onclick =
 
       assignee:
         selectedPeople,
+
+      createdBy:selectedUser,
+      createdByPole:selectedPole,
 
       done:false,
 
@@ -3786,6 +3788,18 @@ function render(){
     tasks.filter(
       task => {
 
+        /* Un opérateur voit les tâches qui lui sont attribuées,
+           ainsi que celles qu'il a lui-même créées/attribuées à d'autres. */
+        const peopleForVisibility = Array.isArray(task.assignee)
+          ? task.assignee
+          : task.assignee ? [task.assignee] : [];
+        const createdByCurrentUser = task.createdBy === selectedUser
+          && (!task.createdByPole || task.createdByPole === selectedPole);
+        const assignedToCurrentUser = peopleForVisibility.includes(selectedUser);
+        const visibleToCurrentUser = createdByCurrentUser || assignedToCurrentUser;
+
+        if(!visibleToCurrentUser) return false;
+
         const matchesStatus =
 
           filter === "all"
@@ -4315,11 +4329,20 @@ function render(){
     }
   );
 
+  const visibleTasks = tasks.filter(task => {
+    const people = Array.isArray(task.assignee)
+      ? task.assignee
+      : task.assignee ? [task.assignee] : [];
+    const createdByCurrentUser = task.createdBy === selectedUser
+      && (!task.createdByPole || task.createdByPole === selectedPole);
+    return createdByCurrentUser || people.includes(selectedUser);
+  });
+
   const total =
-    tasks.length;
+    visibleTasks.length;
 
   const done =
-    tasks.filter(
+    visibleTasks.filter(
       task =>
         task.done
     ).length;
@@ -4351,7 +4374,7 @@ function render(){
 
   const high =
 
-    tasks.filter(
+    visibleTasks.filter(
       task =>
         !task.done &&
         task.priority === "high"
