@@ -2176,18 +2176,17 @@ $("pinSubmit").onclick=validatePin;
 $("pinCancel").onclick=closePinModal;
 $("pinInput").addEventListener("input",()=>{ $("pinInput").value=$("pinInput").value.replace(/\D/g,"").slice(0,4); });
 $("pinConfirm").addEventListener("input",()=>{ $("pinConfirm").value=$("pinConfirm").value.replace(/\D/g,"").slice(0,4); });
-$("pinInput").addEventListener("keydown", event => {
-  if(event.key === "Enter"){
-    event.preventDefault();
-    validatePin();
-  }
-});
-$("pinConfirm").addEventListener("keydown", event => {
-  if(event.key === "Enter"){
-    event.preventDefault();
-    validatePin();
-  }
-});
+
+// Valider avec Entrée depuis n'importe quel champ de la fenêtre PIN.
+document.addEventListener("keydown", event => {
+  if(event.key !== "Enter") return;
+  const modal = $("pinModal");
+  if(!modal || getComputedStyle(modal).display === "none") return;
+  if(!modal.contains(event.target)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if(!$("pinSubmit").disabled) validatePin();
+}, true);
 $("changeUser").onclick=showUserChooser;
 
 /* ================================================= */
