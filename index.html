@@ -2176,6 +2176,18 @@ $("pinSubmit").onclick=validatePin;
 $("pinCancel").onclick=closePinModal;
 $("pinInput").addEventListener("input",()=>{ $("pinInput").value=$("pinInput").value.replace(/\D/g,"").slice(0,4); });
 $("pinConfirm").addEventListener("input",()=>{ $("pinConfirm").value=$("pinConfirm").value.replace(/\D/g,"").slice(0,4); });
+$("pinInput").addEventListener("keydown", event => {
+  if(event.key === "Enter"){
+    event.preventDefault();
+    validatePin();
+  }
+});
+$("pinConfirm").addEventListener("keydown", event => {
+  if(event.key === "Enter"){
+    event.preventDefault();
+    validatePin();
+  }
+});
 $("changeUser").onclick=showUserChooser;
 
 /* ================================================= */
