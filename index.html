@@ -1362,13 +1362,12 @@ button:disabled{
     <div class="filters">
 
       <button
-        class="active"
         id="all"
       >
         Toutes
       </button>
 
-      <button id="todo">
+      <button class="active" id="todo">
         À faire
       </button>
 
@@ -1431,6 +1430,8 @@ import {
   getFirestore,
   doc,
   getDoc,
+  getDocs,
+  collection,
   onSnapshot,
   runTransaction
 }
@@ -1514,11 +1515,13 @@ let tasks = [];
 
 let notes = [];
 
-let filter = "all";
+let filter = "todo";
 
 let personFilter = "all";
 
 let unsub = null;
+let unsubNotes = null;
+let listenGeneration = 0;
 
 /* Autorise temporairement tasks:[] uniquement après une suppression locale de la dernière tâche. */
 let allowEmptyTaskSync = false;
@@ -1813,6 +1816,8 @@ function finishPinLogin(){
 
 function showUserChooser(){
   if(unsub){ unsub(); unsub=null; }
+  if(unsubNotes){ unsubNotes(); unsubNotes=null; }
+  listenGeneration++;
   tasks=[]; notes=[]; selectedUser=null; selectedPole=null;
   sessionStorage.removeItem("workboardUser");
   sessionStorage.removeItem("workboardPole");
@@ -2123,6 +2128,8 @@ onAuthStateChanged(auth,user => {
     $("pinModal").style.display = "none";
   }else{
     if(unsub){ unsub(); unsub=null; }
+    if(unsubNotes){ unsubNotes(); unsubNotes=null; }
+    listenGeneration++;
     tasks=[];
     notes=[];
     selectedUser=null;
@@ -2171,6 +2178,11 @@ function ref(uid){
 
 }
 
+/* Les tâches vivent dans un document permanent, indépendant du jour. */
+function taskRef(uid){
+  return doc(db,"users",uid,"days","operator_tasks");
+}
+
 /* ================================================= */
 /* NORMALISATION DES COMMENTAIRES */
 /* ================================================= */
@@ -2213,136 +2225,116 @@ function normalizeComments(task){
 
 function listen(uid){
 
-  if(unsub)
-    unsub();
+  if(unsub){ unsub(); unsub=null; }
+  if(unsubNotes){ unsubNotes(); unsubNotes=null; }
 
-  unsub =
-    onSnapshot(
-      ref(uid),
+  const generation = ++listenGeneration;
+  const permanentRef = taskRef(uid);
+  const dailyRef = ref(uid);
 
-      snapshot => {
+  /* Migration prudente depuis le document du jour, sans supprimer l'original. */
+  (async () => {
+    try{
+      const permanentSnap = await getDoc(permanentRef);
+      if(generation !== listenGeneration) return;
 
-        const data =
-          snapshot.exists()
-            ? snapshot.data()
-            : {};
+      if(!permanentSnap.exists()){
+        const daysSnapshot = await getDocs(collection(db,"users",uid,"days"));
+        if(generation !== listenGeneration) return;
+        const taskById = new Map();
+        const now = Date.now();
 
-        /*
-         * SECURITE : ne jamais remplacer les tâches affichées par []
-         * si le champ tasks est absent ou invalide. Une ancienne version
-         * de WorkBoard ou une écriture incomplète ne doit pas vider l'écran.
-         */
-        if(Object.prototype.hasOwnProperty.call(data,"tasks")){
-
-          if(Array.isArray(data.tasks)){
-
-            /*
-             * SECURITE RENFORCEE : une version ancienne de WorkBoard ne doit
-             * pas pouvoir vider l'affichage d'une version récente simplement
-             * en envoyant tasks:[] sur un document déjà rempli.
-             * Une liste vide n'est acceptée que si l'application vient
-             * elle-même de supprimer la dernière tâche.
-             */
-            if(data.tasks.length === 0 && tasks.length > 0 && !allowEmptyTaskSync){
-
-              console.warn(
-                "WorkBoard : réception d'un tasks:[] suspect, tâches locales conservées."
-              );
-
-            }
-            else{
-
-              tasks = data.tasks;
-
-              if(data.tasks.length === 0){
-                allowEmptyTaskSync = false;
+        daysSnapshot.forEach(daySnapshot => {
+          const oldData = daySnapshot.data();
+          if(Array.isArray(oldData.tasks)){
+            oldData.tasks.forEach(task => {
+              if(!task || !task.id) return;
+              const existing = taskById.get(task.id);
+              /* Garder la version la plus récente si une tâche existe dans plusieurs jours. */
+              if(!existing || (task.updatedAt || task.completedAt || 0) >= (existing.updatedAt || existing.completedAt || 0)){
+                taskById.set(task.id,{
+                  ...task,
+                  completedAt:task.done ? (task.completedAt || task.updatedAt || now) : null
+                });
               }
-
-            }
-
+            });
           }
-          else{
+        });
 
-            console.warn(
-              "WorkBoard : champ tasks invalide, conservation des tâches locales.",
-              data.tasks
-            );
+        const migratedTasks = Array.from(taskById.values());
 
+        await runTransaction(db, async transaction => {
+          const fresh = await transaction.get(permanentRef);
+          if(!fresh.exists()){
+            transaction.set(permanentRef,{
+              tasks:migratedTasks,
+              updatedAt:now,
+              migratedFromDailyDocument:true
+            },{merge:true});
           }
-
-        }
-        else if(snapshot.exists()){
-
-          console.warn(
-            "WorkBoard : champ tasks absent, conservation des tâches locales."
-          );
-
-        }
-
-        if(
-          Array.isArray(data.notes)
-        ){
-
-          notes =
-            data.notes;
-
-        }
-        else if(
-          typeof data.notes === "string" &&
-          data.notes.trim()
-        ){
-
-          notes = [
-            {
-              id:crypto.randomUUID(),
-              author:"Utilisateur",
-              text:data.notes,
-              createdAt:Date.now()
-            }
-          ];
-
-        }
-        else{
-
-          notes = [];
-
-        }
-
-        $("status").innerHTML =
-          '<span class="dot"></span>Synchronisation active';
-
-        $("status").className =
-          "online";
-
-        render();
-
-        renderNotes();
-
-        /*
-         * Ne jamais créer automatiquement un document vide au chargement.
-         * Le document sera créé par une vraie action de l'utilisateur
-         * (ajout d'une tâche ou d'une note). Cela évite qu'une ouverture
-         * de WorkBoard puisse écraser ou réinitialiser la journée.
-         */
-
-      },
-
-      error => {
-
-        console.error(
-          "Erreur Firestore :",
-          error
-        );
-
-        $("status").innerHTML =
-          '<span class="dot"></span>Erreur de synchronisation';
-
-        $("status").className =
-          "";
-
+        });
       }
 
-    );
+      if(generation !== listenGeneration) return;
+
+      unsub = onSnapshot(permanentRef, snapshot => {
+        if(generation !== listenGeneration) return;
+        const data = snapshot.exists() ? snapshot.data() : {};
+
+        if(Array.isArray(data.tasks)){
+          const sevenDays = 7 * 24 * 60 * 60 * 1000;
+          const now = Date.now();
+          const keptTasks = data.tasks.filter(task =>
+            !(task.done && task.completedAt && now - task.completedAt >= sevenDays)
+          );
+          tasks = keptTasks;
+
+          if(keptTasks.length !== data.tasks.length){
+            runTransaction(db, async transaction => {
+              const fresh = await transaction.get(permanentRef);
+              if(!fresh.exists() || !Array.isArray(fresh.data().tasks)) return;
+              const freshTasks = fresh.data().tasks;
+              const stillKept = freshTasks.filter(task =>
+                !(task.done && task.completedAt && Date.now() - task.completedAt >= sevenDays)
+              );
+              transaction.set(permanentRef,{tasks:stillKept,updatedAt:Date.now()},{merge:true});
+            }).catch(error => console.error("Nettoyage des tâches terminées :",error));
+          }
+        }else if(snapshot.exists()){
+          console.warn("Passage d'infos : champ tasks absent ou invalide, tâches locales conservées.");
+        }
+
+        $("status").innerHTML = '<span class="dot"></span>Synchronisation active';
+        $("status").className = "online";
+        render();
+      }, error => {
+        console.error("Erreur de synchronisation des tâches :",error);
+        $("status").innerHTML = '<span class="dot"></span>Erreur de synchronisation';
+        $("status").className = "";
+      });
+
+      /* Les notes restent dans le document quotidien. */
+      unsubNotes = onSnapshot(dailyRef, snapshot => {
+        if(generation !== listenGeneration) return;
+        const data = snapshot.exists() ? snapshot.data() : {};
+        if(Array.isArray(data.notes)){
+          notes = data.notes;
+        }else if(typeof data.notes === "string" && data.notes.trim()){
+          notes = [{id:crypto.randomUUID(),author:"Utilisateur",text:data.notes,createdAt:Date.now()}];
+        }else{
+          notes = [];
+        }
+        renderNotes();
+      }, error => {
+        console.error("Erreur de synchronisation des notes :",error);
+      });
+
+    }catch(error){
+      console.error("Impossible d'initialiser les tâches persistantes :",error);
+      $("status").innerHTML = '<span class="dot"></span>Erreur de synchronisation';
+      $("status").className = "";
+    }
+  })();
 
 }
 
@@ -2402,8 +2394,8 @@ async function addTaskSafely(task){
   if(!currentUser)
     return;
 
-  const taskRef =
-    ref(
+  const taskDocumentRef =
+    taskRef(
       currentUser.uid
     );
 
@@ -2413,7 +2405,7 @@ async function addTaskSafely(task){
 
       const snap =
         await transaction.get(
-          taskRef
+          taskDocumentRef
         );
 
       const data =
@@ -2451,7 +2443,7 @@ async function addTaskSafely(task){
       allowEmptyTaskSync = false;
 
       transaction.set(
-        taskRef,
+        taskDocumentRef,
         {
           tasks:[
             ...currentTasks,
@@ -2482,8 +2474,8 @@ async function updateTaskSafely(
   if(!currentUser)
     return;
 
-  const taskRef =
-    ref(
+  const taskDocumentRef =
+    taskRef(
       currentUser.uid
     );
 
@@ -2493,7 +2485,7 @@ async function updateTaskSafely(
 
       const snap =
         await transaction.get(
-          taskRef
+          taskDocumentRef
         );
 
       if(!snap.exists())
@@ -2545,7 +2537,7 @@ async function updateTaskSafely(
       allowEmptyTaskSync = (newTasks.length === 0);
 
       transaction.set(
-        taskRef,
+        taskDocumentRef,
         {
           tasks:newTasks,
           date:day,
@@ -2570,8 +2562,8 @@ async function deleteTaskSafely(id){
   if(!currentUser)
     return;
 
-  const taskRef =
-    ref(
+  const taskDocumentRef =
+    taskRef(
       currentUser.uid
     );
 
@@ -2581,7 +2573,7 @@ async function deleteTaskSafely(id){
 
       const snap =
         await transaction.get(
-          taskRef
+          taskDocumentRef
         );
 
       if(!snap.exists())
@@ -2615,7 +2607,7 @@ async function deleteTaskSafely(id){
       allowEmptyTaskSync = (newTasks.length === 0);
 
       transaction.set(
-        taskRef,
+        taskDocumentRef,
         {
           tasks:newTasks,
           date:day,
@@ -2893,18 +2885,6 @@ async function deleteNoteSafely(noteId){
       if(!note)
         return;
 
-      if(
-        note.author !== selectedUser
-      ){
-
-        console.warn(
-          "Suppression refusée : cette note n'appartient pas à l'utilisateur connecté."
-        );
-
-        return;
-
-      }
-
       const newNotes =
         currentNotes.filter(
           item => item.id !== noteId
@@ -3113,9 +3093,7 @@ function renderNotes(){
         date
       );
 
-      if(
-        note.author === selectedUser
-      ){
+      {
 
         const deleteButton =
           document.createElement(
@@ -3129,14 +3107,14 @@ function renderNotes(){
           "🗑️";
 
         deleteButton.title =
-          "Supprimer ma note";
+          "Supprimer cette note";
 
         deleteButton.onclick =
           async () => {
 
             if(
               !confirm(
-                "Supprimer cette note ?"
+                "Supprimer cette note ? Même si elle a été écrite par quelqu’un d’autre."
               )
             )
               return;
@@ -3675,10 +3653,15 @@ async function toggle(id){
 
   await updateTaskSafely(
     id,
-    task => ({
-      ...task,
-      done:!task.done
-    })
+    task => {
+      const nextDone = !task.done;
+      return {
+        ...task,
+        done:nextDone,
+        completedAt:nextDone ? Date.now() : null,
+        updatedAt:Date.now()
+      };
+    }
   );
 
 }
